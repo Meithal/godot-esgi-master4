@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using FlappyCore;
 
 public partial class Root : Node3D
 {
@@ -11,6 +12,7 @@ public partial class Root : Node3D
 	{
 		GD.Print("Mon comp ready");
 		GD.Print("Mon comp ready2");
+		GD.Print(FlappyCore.ClassFlappy.Toto());
 	}
 
 	public override void _Process(double delta)

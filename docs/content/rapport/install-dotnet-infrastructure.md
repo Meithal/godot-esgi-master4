@@ -180,10 +180,9 @@ La page de reference pour les tests https://learn.microsoft.com/en-us/dotnet/cor
 
 Creer dependance de godot au projet core
 ---
-
-Simplement 
+ 
 
 ```
-dotnet sln add ../core-dotnet/FlappyCore/FlappyCore.csproj
+dotnet reference add ../core-dotnet/FlappyCore/FlappyCore.csproj  --project Nouveau\ projet\ de\ jeu.csproj
 ```
 
