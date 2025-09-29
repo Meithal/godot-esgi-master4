@@ -175,3 +175,15 @@ dotnet sln add FlappyCore.Tests/FlappyCore.Tests.csproj
 ```
 
 Puis redemarrer VSCode.
+
+La page de reference pour les tests https://learn.microsoft.com/en-us/dotnet/core/testing/unit-testing-csharp-with-mstest 
+
+Creer dependance de godot au projet core
+---
+
+Simplement 
+
+```
+dotnet sln add ../core-dotnet/FlappyCore/FlappyCore.csproj
+```
+
