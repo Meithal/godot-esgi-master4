@@ -39,6 +39,9 @@ chacun son gitignore
 - Dans la solution du projet Godot, ajouter
 une dépendance au projet Core
 
+Solution .net 8
+---
+
 Taper `dotnet --help` dans une console donne un apercu de ce qu'on peut faire.
 
 `dotnet help new` ouvre une page web assez utile https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-new
@@ -72,3 +75,11 @@ Apparamment net8.0 est ce qu'on doit mettre.
 Cela cree une arborescence avec un fichier Class1.cs
 et un repertoire `obj` avec beaucoup de chemins de
 dossiers en nom absolu, qu'on suppose doit mettre dans un gitignore.
+
+Une fois fait on considere que le point 1 du projet est realise et on
+fait un premier commit.
+
+Mais on se rend compte qu'on a cree un projet avant de creer la solution.
+Du coup `dotnet new sln`.
+
+Puis `dotnet new classlib --framework net8.0`

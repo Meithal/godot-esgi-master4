@@ -32,7 +32,11 @@
   <ul>
     <li><a href="#outils-de-base">Outils de base</a></li>
     <li><a href="#godot">Godot</a></li>
-    <li><a href="#partie-dotnet">Partie dotnet</a></li>
+    <li><a href="#partie-dotnet">Partie dotnet</a>
+      <ul>
+        <li><a href="#solution-net-8">Solution .net 8</a></li>
+      </ul>
+    </li>
   </ul>
 </nav>
 </div>
@@ -64,6 +68,7 @@ chacun son gitignore</li>
 <li>Dans la solution du projet Godot, ajouter
 une dépendance au projet Core</li>
 </ul>
+<h2 id="solution-net-8">Solution .net 8</h2>
 <p>Taper <code>dotnet --help</code> dans une console donne un apercu de ce qu&rsquo;on peut faire.</p>
 <p><code>dotnet help new</code> ouvre une page web assez utile <a href="https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-new">https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-new</a></p>
 <p>On y apprend que <code>dotnet new list</code> permet de lister tous les templates
@@ -86,6 +91,11 @@ que <code>dotnet new classlib --framework 8.0.414</code> fonctionne.</p>
 <p>Cela cree une arborescence avec un fichier Class1.cs
 et un repertoire <code>obj</code> avec beaucoup de chemins de
 dossiers en nom absolu, qu&rsquo;on suppose doit mettre dans un gitignore.</p>
+<p>Une fois fait on considere que le point 1 du projet est realise et on
+fait un premier commit.</p>
+<p>Mais on se rend compte qu&rsquo;on a cree un projet avant de creer la solution.
+Du coup <code>dotnet new sln</code>.</p>
+<p>Puis <code>dotnet new classlib --framework net8.0</code></p>
 
   </main>
   <footer>
