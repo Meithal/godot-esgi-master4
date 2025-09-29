@@ -1,4 +1,4 @@
-baseURL = 'https://example.org/'
+baseURL = 'https://meithal.github.io/godot-esgi-master4/'
 languageCode = 'fr-FR'
 title = 'Documentation projet Godot'
 theme = 'hugo_theme_adam_eve'
