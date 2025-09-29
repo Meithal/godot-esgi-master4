@@ -1,0 +1,10 @@
+baseURL = 'https://example.org/'
+languageCode = 'fr-FR'
+title = 'Documentation projet Godot'
+theme = 'hugo_theme_adam_eve'
+
+[markup]
+  [markup.tableOfContents]
+    endLevel = 6
+    ordered = false
+    startLevel = 1

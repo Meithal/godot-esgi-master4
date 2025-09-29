@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr-FR">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="generator" content="Hugo 0.150.0">
+  <title>Install Dotnet Infrastructure &middot; Documentation projet Godot</title>
+  
+  <link rel="stylesheet" type="text/css" href="/main.min.8dfb51d31a1933f8f72eaa0031d5501a3f416fe4252ce28f27eac3e689170a82.css" integrity="sha256-jftR0xoZM/j3LqoAMdVQGj9Bb&#43;QlLOKPJ&#43;rD5okXCoI=" media="screen" title="default">
+  
+
+</head>
+
+<body>
+  <nav>
+  
+  <a href="http://localhost:1313/"><span class='homepage'>🏡</span>&nbsp;Homepage</a>
+  
+
+  
+  
+  
+  
+  <hr />
+</nav>
+
+  <aside>
+    <div id="toc" class="well col-md-4 col-sm-6">
+  <h1>Table of contents</h1>
+  <nav id="TableOfContents">
+  <ul>
+    <li><a href="#outils-de-base">Outils de base</a></li>
+    <li><a href="#godot">Godot</a></li>
+    <li><a href="#partie-dotnet">Partie dotnet</a></li>
+  </ul>
+</nav>
+</div>
+
+    <hr />
+  </aside>
+  <main>
+  <h1 id="outils-de-base">Outils de base</h1>
+<p>Pour installer godot-mono, sur Mac</p>
+<pre tabindex="0"><code>brew install godot-mono
+</code></pre><p>Cela installe automatiquement dotnet 8 comme dependance.</p>
+<h1 id="godot">Godot</h1>
+<p>Pour la partie Godot il faut creer le projet via
+le GUI de godot et creer un script C# qu&rsquo;on
+attache au composant root.</p>
+<p>Le fait d&rsquo;ouvrir ce script cree automatiquement un .sln et un .csproj</p>
+<h1 id="partie-dotnet">Partie dotnet</h1>
+<p>La mission qu&rsquo;on doit realiser est la suivante</p>
+<p>Dans un dossier vide, frère du dossier avec le
+projet Godot:</p>
+<ul>
+<li>Créer une solution .Net 8</li>
+<li>Créer un projet Core de type Classe Library</li>
+<li>Créer un projet Iteration/Test de type
+Console Application/Unit Test</li>
+<li>Créer votre dépôt git avec le projet Godot et
+la solution C# chacun dans son dossier avec
+chacun son gitignore</li>
+<li>Dans la solution du projet Godot, ajouter
+une dépendance au projet Core</li>
+</ul>
+<p>Taper <code>dotnet --help</code> dans une console donne un apercu de ce qu&rsquo;on peut faire.</p>
+<p><code>dotnet help new</code> ouvre une page web assez utile <a href="https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-new">https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-new</a></p>
+<p>On y apprend que <code>dotnet new list</code> permet de lister tous les templates
+qu&rsquo;on peut creer. On suppose que <code>classlib</code> est le template qu&rsquo;on
+veut utiliser. Comment s&rsquo;assurer que le projet soit bien
+installe en .net 8 ? En effet <code>dotnet --list-sdks</code> affiche</p>
+<pre tabindex="0"><code>8.0.414 [/usr/local/share/dotnet/sdk]
+9.0.305 [/usr/local/share/dotnet/sdk]
+</code></pre><p>On suppose que &ldquo;framework&rdquo; et &ldquo;sdk&rdquo; sont synonymes et
+que <code>dotnet new classlib --framework 8.0.414</code> fonctionne.</p>
+<p>Mais cela affiche une erreur</p>
+<pre tabindex="0"><code>Error: Invalid option(s):
+--framework 8.0.414
+   &#39;8.0.414&#39; is not a valid value for --framework. The possible values are:
+      net8.0           - Target net8.0
+      net9.0           - Target net9.0
+      netstandard2.0   - Target netstandard2.0
+      netstandard2.1   - Target netstandard2.1
+</code></pre><p>Apparamment net8.0 est ce qu&rsquo;on doit mettre.</p>
+<p>Cela cree une arborescence avec un fichier Class1.cs
+et un repertoire <code>obj</code> avec beaucoup de chemins de
+dossiers en nom absolu, qu&rsquo;on suppose doit mettre dans un gitignore.</p>
+
+  </main>
+  <footer>
+    <hr />
+    <p>Last modification: 2025-09-29 at 19:54</p>
+
+  </footer>
+</body>
+</html>

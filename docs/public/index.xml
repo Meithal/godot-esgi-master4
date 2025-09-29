@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Accueil on Documentation projet Godot</title>
+    <link>http://localhost:1313/</link>
+    <description>Recent content in Accueil on Documentation projet Godot</description>
+    <generator>Hugo</generator>
+    <language>fr-FR</language>
+    <lastBuildDate>Mon, 29 Sep 2025 20:04:13 +0200</lastBuildDate>
+    <atom:link href="http://localhost:1313/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Test</title>
+      <link>http://localhost:1313/posts/test/</link>
+      <pubDate>Mon, 29 Sep 2025 20:04:13 +0200</pubDate>
+      <guid>http://localhost:1313/posts/test/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Test</title>
+      <link>http://localhost:1313/test/</link>
+      <pubDate>Mon, 29 Sep 2025 20:02:51 +0200</pubDate>
+      <guid>http://localhost:1313/test/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Install Dotnet Infrastructure</title>
+      <link>http://localhost:1313/rapport/install-dotnet-infrastructure/</link>
+      <pubDate>Mon, 29 Sep 2025 19:54:34 +0200</pubDate>
+      <guid>http://localhost:1313/rapport/install-dotnet-infrastructure/</guid>
+      <description>&lt;h1 id=&#34;outils-de-base&#34;&gt;Outils de base&lt;/h1&gt;&#xA;&lt;p&gt;Pour installer godot-mono, sur Mac&lt;/p&gt;&#xA;&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;brew install godot-mono&#xA;&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Cela installe automatiquement dotnet 8 comme dependance.&lt;/p&gt;&#xA;&lt;h1 id=&#34;godot&#34;&gt;Godot&lt;/h1&gt;&#xA;&lt;p&gt;Pour la partie Godot il faut creer le projet via&#xA;le GUI de godot et creer un script C# qu&amp;rsquo;on&#xA;attache au composant root.&lt;/p&gt;&#xA;&lt;p&gt;Le fait d&amp;rsquo;ouvrir ce script cree automatiquement un .sln et un .csproj&lt;/p&gt;&#xA;&lt;h1 id=&#34;partie-dotnet&#34;&gt;Partie dotnet&lt;/h1&gt;&#xA;&lt;p&gt;La mission qu&amp;rsquo;on doit realiser est la suivante&lt;/p&gt;&#xA;&lt;p&gt;Dans un dossier vide, frère du dossier avec le&#xA;projet Godot:&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>
