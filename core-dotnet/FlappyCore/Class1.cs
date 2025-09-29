@@ -1,4 +1,4 @@
-﻿namespace core_dotnet;
+﻿namespace FlappyCore;
 
 public class Class1
 {
