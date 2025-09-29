@@ -1,10 +1,12 @@
 ﻿namespace FlappyCore.Tests;
 
 [TestClass]
-public sealed class Test1
+public sealed class TestToto
 {
     [TestMethod]
-    public void TestMethod1()
+    public void TestTotoWorks()
     {
+
+        Assert.AreEqual("toto", ClassFlappy.Toto());
     }
 }
