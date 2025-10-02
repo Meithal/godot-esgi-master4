@@ -8,13 +8,13 @@ public partial class Root : Node2D
 	[Export] private float _speed = 1f;
 	private float time = 1f;
 
-	private ClassFlappy _classFlappy = new ClassFlappy();
+	private Flappy _classFlappy = Flappy.CreateWithDimension(200, 1000, 100, 10);
 
 	public override void _Ready()
 	{
 		GD.Print("Mon comp ready");
 		GD.Print("Mon comp ready2");
-		GD.Print(ClassFlappy.Toto());
+		GD.Print(Flappy.Toto());
 
 		_classFlappy.GenerateObstaclesValues(new Random().Next());
 

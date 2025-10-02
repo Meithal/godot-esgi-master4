@@ -20,7 +20,6 @@ public sealed class TestToto
             for (int i = 0; i < 100; i++)
             {
                 accum += _classFlappy.GetObstacle(i);
-
             }
             Assert.AreEqual(0, accum);
         }
