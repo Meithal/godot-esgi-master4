@@ -6,6 +6,7 @@
 [node name="Node2D" type="Node2D"]
 script = ExtResource("1_pq8q7")
 _width = 5000
+fenetre_jeu = Vector2(400, 400)
 
 [node name="Canvas" type="ColorRect" parent="."]
 unique_name_in_owner = true
@@ -21,7 +22,7 @@ unique_name_in_owner = true
 position = Vector2(275, 337)
 sprite_frames = ExtResource("2_pyidc")
 autoplay = "default"
-frame_progress = 0.72378844
+frame_progress = 0.057106193
 
 [node name="Camera2D" type="Camera2D" parent="Canvas/Bird/AnimatedSprite2D"]
 position = Vector2(336, 0)

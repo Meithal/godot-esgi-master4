@@ -6,8 +6,8 @@ public partial class Root : Node2D
 {
 
 	[Export] private float _speed = 1f;
-	[Export] private int _width = 10000;
-	[Export] private int _height = 300;
+	[Export] private int _width = 1000;
+	[Export] private int _height = 10;
 	[Export] private int _num_obsacles = 100;
 	private float time = 1f;
 
@@ -28,7 +28,7 @@ public partial class Root : Node2D
 		_core_flappy.GenerateObstaclesValues(new Random().Next());
 
 		var canvas = GetNode<ColorRect>("%Canvas");
-		canvas.Size = new Vector2(_width, _height);
+		canvas.Size = new Vector2(_width * 100, _height * 100);
 
 		_godot_bird = GetNode<Node2D>("%Bird");
 
@@ -50,11 +50,21 @@ public partial class Root : Node2D
 		// GD.Print("Mon comp ready");
 		// this.Translate();
 
-		_core_flappy.Tick((float)delta);
 
 		// convertir le Vector2 de Csharp vers celui de Godot
 		// dans notre moteur le Y croit vers le haut
+		// l'unite de godot par defaut est de 100 pixels par metre
 		var pos = _core_flappy.GetBirdPosition();
-		_godot_bird.Position = new Godot.Vector2(pos.X, -pos.Y);
+		_godot_bird.Position = new Godot.Vector2(pos.X * 100, -pos.Y * 100);
+	}
+
+	// le delt est en secondes
+	public override void _PhysicsProcess(double delta)
+	{
+		base._PhysicsProcess(delta);
+
+		// notre moteur fonctionne en secondes
+		_core_flappy.Tick((float)delta);
+
 	}
 }

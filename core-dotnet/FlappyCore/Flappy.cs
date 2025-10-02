@@ -9,10 +9,11 @@ internal class FlyingBird
     public Vector2 speed { get; set; }
     public Vector2 acceleration { get; set; }
 
-
+    
     public void Tick(float delta_time)
     {
-        speed += acceleration * MathF.Pow(delta_time, 2);
+        Console.WriteLine(speed);
+        speed += acceleration * delta_time;
         position += speed * delta_time;
     }
 }
@@ -41,7 +42,7 @@ public class Flappy
         _bird = new FlyingBird
         {
             acceleration = new Vector2(0, -9.81f),
-            speed = new Vector2(100, 100),
+            speed = new Vector2(1.4f, 0),
             position = new Vector2(Math.Min(width, 10), height/2)
         };
     }
