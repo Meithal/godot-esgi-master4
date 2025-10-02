@@ -28,13 +28,16 @@ public class Flappy
     #endregion
 
     #region Flappy
-    private readonly double[] _obstacles = new double[100];
+    private readonly double[] _obstacles;
     private readonly Vector2 _world_dimensions;
+    private readonly int _num_obstacles;
     private readonly FlyingBird _bird;
 
-    private Flappy(int height, int width)
+    private Flappy(int height, int width, int num_obstacles)
     {
         _world_dimensions = new Vector2(height, width);
+        _obstacles = new double[num_obstacles];
+        _num_obstacles = num_obstacles;
         _bird = new FlyingBird
         {
             acceleration = new Vector2(-9.81f, 0),
@@ -44,18 +47,17 @@ public class Flappy
     }
 
     public static Flappy CreateWithDimension(
-        int height, int width,
-        float posBirdY, float posBirdX
-        )
+        int width, int height, int num_obstacles
+    )
     {
-        return new Flappy(height, width);
+        return new Flappy(height, width, num_obstacles);
     }
 
     public void GenerateObstaclesValues(int seed)
     {
         var rand = new Random(seed);
 
-        for (int i = 0; i < 100; i++)
+        for (int i = 0; i < _num_obstacles; i++)
         {
             _obstacles[i] = rand.NextDouble();
         }

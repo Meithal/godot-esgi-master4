@@ -1,25 +1,23 @@
-[gd_scene load_steps=2 format=3 uid="uid://cfw483fw0w7t6"]
+[gd_scene load_steps=3 format=3 uid="uid://cfw483fw0w7t6"]
 
 [ext_resource type="Script" uid="uid://bg6epysioprve" path="res://Root.cs" id="1_pq8q7"]
+[ext_resource type="SpriteFrames" uid="uid://1720pq077f7k" path="res://animated_sprites/flying_bird.tres" id="2_pyidc"]
 
 [node name="Node2D" type="Node2D"]
 script = ExtResource("1_pq8q7")
 
 [node name="Canvas" type="ColorRect" parent="."]
 unique_name_in_owner = true
+offset_top = 1.0
 offset_right = 1153.0
-offset_bottom = 648.0
+offset_bottom = 649.0
 color = Color(0.25882354, 1, 0.44705883, 1)
 
-[node name="HBoxContainer" type="HBoxContainer" parent="Canvas"]
-layout_mode = 1
-anchors_preset = 2
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_top = -60.0
-offset_right = 40.0
-grow_vertical = 0
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Canvas"]
+position = Vector2(275, 337)
+sprite_frames = ExtResource("2_pyidc")
+autoplay = "default"
+frame_progress = 0.57088494
 
-[node name="ColorRect" type="ColorRect" parent="Canvas/HBoxContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
+[node name="Camera2D" type="Camera2D" parent="Canvas/AnimatedSprite2D"]
+position = Vector2(336, 0)

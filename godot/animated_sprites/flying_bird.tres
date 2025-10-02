@@ -1,0 +1,74 @@
+[gd_resource type="SpriteFrames" load_steps=11 format=3 uid="uid://1720pq077f7k"]
+
+[ext_resource type="Texture2D" uid="uid://di51ditrvf3mx" path="res://animated_sprites/bird-sprite-animation-3d-computer-graphics-sprite-5659526ccf5cb49684f4a45b099994c8.png" id="1_eka2e"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_bh7q2"]
+atlas = ExtResource("1_eka2e")
+region = Rect2(184, 368, 184, 184)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_aur75"]
+atlas = ExtResource("1_eka2e")
+region = Rect2(368, 368, 184, 184)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_gdksl"]
+atlas = ExtResource("1_eka2e")
+region = Rect2(552, 368, 184, 184)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_6s2ot"]
+atlas = ExtResource("1_eka2e")
+region = Rect2(736, 368, 184, 184)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_kg7kb"]
+atlas = ExtResource("1_eka2e")
+region = Rect2(0, 552, 184, 184)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ffynf"]
+atlas = ExtResource("1_eka2e")
+region = Rect2(184, 552, 184, 184)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_5pdu0"]
+atlas = ExtResource("1_eka2e")
+region = Rect2(368, 552, 184, 184)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_638gn"]
+atlas = ExtResource("1_eka2e")
+region = Rect2(552, 552, 184, 184)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_75f53"]
+atlas = ExtResource("1_eka2e")
+region = Rect2(736, 552, 184, 184)
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_bh7q2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_aur75")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_gdksl")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_6s2ot")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_kg7kb")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ffynf")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_5pdu0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_638gn")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_75f53")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
