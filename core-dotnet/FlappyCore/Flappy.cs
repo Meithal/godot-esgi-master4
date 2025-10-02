@@ -10,10 +10,10 @@ internal class FlyingBird
     public Vector2 acceleration { get; set; }
 
 
-    public void Tick()
+    public void Tick(float delta_time)
     {
-        speed += acceleration;
-        position += speed;
+        speed += acceleration * MathF.Pow(delta_time, 2);
+        position += speed * delta_time;
     }
 }
 
@@ -40,10 +40,15 @@ public class Flappy
         _num_obstacles = num_obstacles;
         _bird = new FlyingBird
         {
-            acceleration = new Vector2(-9.81f, 0),
-            speed = new Vector2(0, 10),
-            position = new Vector2(Math.Min(width, 10), height / 2)
+            acceleration = new Vector2(0, -9.81f),
+            speed = new Vector2(100, 100),
+            position = new Vector2(Math.Min(width, 10), height/2)
         };
+    }
+
+    public void Tick(float delta_time)
+    {
+        _bird.Tick(delta_time);
     }
 
     public static Flappy CreateWithDimension(
@@ -66,6 +71,11 @@ public class Flappy
     public double GetObstacle(int which)
     {
         return _obstacles[which];
+    }
+
+    public Vector2 GetBirdPosition()
+    {
+        return _bird.position;
     }
 
     #endregion
