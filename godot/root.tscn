@@ -22,7 +22,7 @@ unique_name_in_owner = true
 position = Vector2(275, 337)
 sprite_frames = ExtResource("2_pyidc")
 autoplay = "default"
-frame_progress = 0.057106193
+frame_progress = 0.33478266
 
 [node name="Camera2D" type="Camera2D" parent="Canvas/Bird/AnimatedSprite2D"]
 position = Vector2(336, 0)

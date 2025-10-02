@@ -12,7 +12,7 @@ internal class FlyingBird
     
     public void Tick(float delta_time)
     {
-        Console.WriteLine(speed);
+        // Console.WriteLine(speed);
         speed += acceleration * delta_time;
         position += speed * delta_time;
     }
@@ -43,7 +43,7 @@ public class Flappy
         {
             acceleration = new Vector2(0, -9.81f),
             speed = new Vector2(1.4f, 0),
-            position = new Vector2(Math.Min(width, 10), height/2)
+            position = new Vector2(Math.Min(width, 10), height / 2)
         };
     }
 
@@ -77,6 +77,11 @@ public class Flappy
     public Vector2 GetBirdPosition()
     {
         return _bird.position;
+    }
+
+    public void Flap()
+    {
+        _bird.speed = new Vector2(_bird.speed.X, _bird.speed.Y + 10);
     }
 
     #endregion

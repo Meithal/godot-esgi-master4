@@ -19,6 +19,8 @@ public partial class Root : Node2D
 
 	public override void _Ready()
 	{
+		base._Ready();
+
 		GD.Print("Mon comp ready");
 		GD.Print("Mon comp ready2");
 		GD.Print(Flappy.Toto());
@@ -47,6 +49,8 @@ public partial class Root : Node2D
 
 	public override void _Process(double delta)
 	{
+
+		base._Process(delta);
 		// GD.Print("Mon comp ready");
 		// this.Translate();
 
@@ -67,4 +71,14 @@ public partial class Root : Node2D
 		_core_flappy.Tick((float)delta);
 
 	}
+
+	public override void _Input(InputEvent @event)
+	{
+		base._Input(@event);
+
+		if (Input.IsActionJustPressed("Flap"))
+		{
+			_core_flappy.Flap();
+		}
+    }
 }
