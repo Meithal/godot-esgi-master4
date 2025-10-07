@@ -41,22 +41,34 @@ public class Flappy
     #endregion
 
     #region Flappy
-    private readonly double[] _obstacles;
-    private readonly Vector2 _world_dimensions;
+    private readonly float[] _obstacles;
+    private readonly float _width;
+    private readonly float _height;
     private readonly int _num_obstacles;
+    private readonly float _padding; // l espace avant de commencer a dessiner les obstacles
     private readonly FlyingBird _bird;
+    private readonly float _ecart_obstacles;
 
-    private Flappy(int height, int width, int num_obstacles)
+    private Flappy(float height, float width, int num_obstacles, float padding)
     {
-        _world_dimensions = new Vector2(height, width);
-        _obstacles = new double[num_obstacles];
+        _height = height;
+        _width = width;
+        _obstacles = new float[num_obstacles];
         _num_obstacles = num_obstacles;
+        _padding = padding;
+        _ecart_obstacles = (_width - 2 * _padding) / _num_obstacles;
         _bird = new FlyingBird
         {
             Acceleration = new Vector2(0, -9.81f),
             Speed = new Vector2(1.4f, 0),
-            Position = new Vector2(Math.Min(width, 10), height / 2)
+            Position = new Vector2(Math.Min(width, 0.1f), height / 2)
         };
+    }
+
+    private void ResetBird()
+    {
+        _bird.Speed = new Vector2(1.4f, 0);
+        _bird.Position = new Vector2(Math.Min(_width, 0.1f), _height / 2);
     }
 
     public void Tick(float delta_time)
@@ -65,13 +77,15 @@ public class Flappy
         _bird.Tick(delta_time);
         var posp = _bird.Position;
         bool collided = CheckCollision(posa, posp);
+        if (collided)
+            ResetBird();
     }
 
     public static Flappy CreateWithDimension(
-        int width, int height, int num_obstacles
+        float width, float height, int num_obstacles, float padding
     )
     {
-        return new Flappy(height, width, num_obstacles);
+        return new Flappy(height, width, num_obstacles, padding);
     }
 
     public void GenerateObstaclesValues(int seed)
@@ -80,11 +94,11 @@ public class Flappy
 
         for (int i = 0; i < _num_obstacles; i++)
         {
-            _obstacles[i] = rand.NextDouble();
+            _obstacles[i] = (float)rand.NextDouble();
         }
     }
 
-    public double GetObstacle(int which)
+    public float GetObstacle(int which)
     {
         return _obstacles[which];
     }
@@ -102,9 +116,21 @@ public class Flappy
 
     private bool CheckCollision(Vector2 posAvant, Vector2 posApres)
     {
+        if (posApres.Y < 0)
+            return true;
+        if (posApres.Y > _height)
+            return true;
 
+        int nextObstacle = (int)((_bird.Position.X - _padding) / _ecart_obstacles);
 
-        return true;
+        if (
+            posAvant.X <= _padding + nextObstacle * _ecart_obstacles
+            && posApres.X > _padding + nextObstacle * _ecart_obstacles
+            && posApres.Y < _obstacles[nextObstacle] * _height
+        )
+            return true;
+
+        return false;
     }
     #endregion
 }

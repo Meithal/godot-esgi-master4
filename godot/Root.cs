@@ -1,14 +1,17 @@
 using Godot;
 using System;
 using FlappyCore;
+using System.Reflection.Metadata;
 
 public partial class Root : Node2D
 {
+	public const int PIXELS_PER_M = 100; // Godot par defaut considere que 1m = 100 pixels
 
 	[Export] private float _speed = 1f;
-	[Export] private int _width = 1000;
-	[Export] private int _height = 10;
+	[Export] private float _width = 1000;
+	[Export] private float _height = 10.8f; // en mn 
 	[Export] private int _num_obsacles = 100;
+	[Export] private float _padding = 2;
 	private float time = 1f;
 
 	[Export] private Vector2 fenetre_jeu = new Vector2(400, 200);
@@ -25,12 +28,14 @@ public partial class Root : Node2D
 		GD.Print("Mon comp ready2");
 		GD.Print(Flappy.Toto());
 
-		_core_flappy = Flappy.CreateWithDimension(_width, _height, _num_obsacles);
+		_core_flappy = Flappy.CreateWithDimension(_width, _height, _num_obsacles, _padding);
 
 		_core_flappy.GenerateObstaclesValues(new Random().Next());
 
 		var canvas = GetNode<ColorRect>("%Canvas");
-		canvas.Size = new Vector2(_width * 100, _height * 100);
+		canvas.GrowVertical = Control.GrowDirection.Begin;
+
+		canvas.Size = new Vector2(_width * PIXELS_PER_M, _height * PIXELS_PER_M);
 
 		_godot_bird = GetNode<Node2D>("%Bird");
 
@@ -38,10 +43,12 @@ public partial class Root : Node2D
 			for (int i = 0; i < _num_obsacles; i++)
 			{
 				var bar = new ColorRect();
-				double value = _core_flappy.GetObstacle(i);
+				float value = _core_flappy.GetObstacle(i);
 				bar.Color = Colors.Red;
-				bar.Size = new Vector2(8, (int)(100 * value));
-				bar.Position = new Vector2(i * _width / 100, 0);
+
+				var h = _height * PIXELS_PER_M * value;
+				bar.Size = new Vector2(8, h);
+				bar.Position = new Vector2(_padding * PIXELS_PER_M + i * (_width - 2 * _padding), _height * PIXELS_PER_M - h);
 				canvas.AddChild(bar);
 			}
 		}
@@ -59,10 +66,12 @@ public partial class Root : Node2D
 		// dans notre moteur le Y croit vers le haut
 		// l'unite de godot par defaut est de 100 pixels par metre
 		var pos = _core_flappy.GetBirdPosition();
-		_godot_bird.Position = new Godot.Vector2(pos.X * 100, -pos.Y * 100);
+		_godot_bird.Position = new Godot.Vector2(
+			pos.X * PIXELS_PER_M, (_height  -pos.Y)  * PIXELS_PER_M
+		);
 	}
 
-	// le delt est en secondes
+	// le delta est en secondes
 	public override void _PhysicsProcess(double delta)
 	{
 		base._PhysicsProcess(delta);
