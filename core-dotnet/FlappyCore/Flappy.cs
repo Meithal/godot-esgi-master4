@@ -10,24 +10,15 @@ internal class FlyingBird
     public Vector2 Speed { get; set; }
     public Vector2 Acceleration { get; set; }
 
-    private float _flap_time = 0;
     public Vector2 VerticalAcceleration = new Vector2(0, 15);
 
     public void Tick(float delta_time)
     {
-        var acc = Acceleration;
-        //if(_flap_time > 0)
-        //    acc
-        // Console.WriteLine(speed);
         Speed += Acceleration * delta_time;
         Position += Speed * delta_time;
     }
 
     // ajoute une acceleration verticale pendant une seconde
-    public void Flap()
-    {
-        _flap_time = 1;
-    }
 }
 
 public class Flappy
