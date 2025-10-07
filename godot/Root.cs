@@ -80,5 +80,19 @@ public partial class Root : Node2D
 		{
 			_core_flappy.Flap();
 		}
-    }
+
+		if (Input.IsActionJustPressed("Leave Game"))
+		{
+			GD.Print("leave");
+			GetTree().Root.PropagateNotification((int)NotificationWMCloseRequest);
+		}
+	}
+	
+	public override void _Notification(int what)
+	{
+		if (what == NotificationWMCloseRequest)
+		{
+			GetTree().Quit(); // default behavior
+		}
+	}
 }
