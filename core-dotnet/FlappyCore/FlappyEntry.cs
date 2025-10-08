@@ -34,7 +34,7 @@ public class FlappyGameBridge
     private Flappy game;
     public OutputData Init()
     {
-        game = Flappy.
+        game = Flappy.CreateWithDimension(1.0f, 1.0f, MAX_OBSTACLES, 0.1f); // faudra expliquer les valeurs
         return new OutputData(MAX_OBSTACLES);
     }
 
