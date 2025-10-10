@@ -10,15 +10,11 @@ internal class FlyingBird
     public Vector2 Speed { get; set; }
     public Vector2 Acceleration { get; set; }
 
-    public Vector2 VerticalAcceleration = new Vector2(0, 15);
-
     public void Tick(float delta_time)
     {
         Speed += Acceleration * delta_time;
         Position += Speed * delta_time;
     }
-
-    // ajoute une acceleration verticale pendant une seconde
 }
 
 public class Flappy
@@ -72,6 +68,12 @@ public class Flappy
             ResetBird();
     }
 
+    /**
+     * Methode instanciant un terrain de jeu
+     * la hauteur et la largeur sont en metres. Le flappy fait enviror un metre de haut.
+     * le padding est la distance avant que les premiers obstacles arrivent 
+     * et l'espace qu'il y a apres le dernier obstacle.
+     */
     public static Flappy CreateWithDimension(
         float width, float height, int num_obstacles, float padding
     )

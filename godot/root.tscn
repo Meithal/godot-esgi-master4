@@ -23,3 +23,9 @@ frame_progress = 0.33478266
 
 [node name="Camera2D" type="Camera2D" parent="Canvas/Bird/AnimatedSprite2D"]
 position = Vector2(336, 0)
+
+[node name="ColorRect" type="ColorRect" parent="Canvas/Bird"]
+custom_minimum_size = Vector2(4, 4)
+offset_right = 1.0
+offset_bottom = 1.0
+color = Color(1, 0, 0, 1)

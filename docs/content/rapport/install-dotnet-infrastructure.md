@@ -6,10 +6,9 @@ title = 'Install Dotnet Infrastructure'
 
 # Outils de base
 
-
 Pour installer godot-mono, sur Mac
 
-```
+```bash
 brew install godot-mono
 ```
 
@@ -29,6 +28,7 @@ La mission qu'on doit realiser est la suivante
 
 Dans un dossier vide, frère du dossier avec le
 projet Godot:
+
 - Créer une solution .Net 8
 - Créer un projet Core de type Classe Library
 - Créer un projet Iteration/Test de type
@@ -50,7 +50,8 @@ Taper `dotnet --help` dans une console donne un apercu de ce qu'on peut faire.
 qu'on peut creer. On suppose que `classlib` est le template qu'on
 veut utiliser. Comment s'assurer que le projet soit bien
 installe en .net 8 ? `dotnet --list-sdks` affiche
-```
+
+```bash
 8.0.414 [/usr/local/share/dotnet/sdk]
 9.0.305 [/usr/local/share/dotnet/sdk]
 ```
@@ -60,7 +61,7 @@ que `dotnet new classlib --framework 8.0.414` fonctionne.
 
 Mais cela affiche une erreur
 
-```
+```bash
 Error: Invalid option(s):
 --framework 8.0.414
    '8.0.414' is not a valid value for --framework. The possible values are:
@@ -92,7 +93,7 @@ Tests
 
 Pour les tests on trouve plusieurs recettes
 
-```
+```bash
 MSTest Playwright Test Project    mstest-playwright           [C#]        Test/MSTest/Playwright/Desktop/Web
 MSTest Test Class                 mstest-class                [C#],F#,VB  Test/MSTest                       
 MSTest Test Project               mstest                      [C#],F#,VB  Test/MSTest/Desktop/Web           
@@ -103,13 +104,14 @@ NUnit Playwright Test Project     nunit-playwright            [C#]        Test/N
 ...
 xUnit Test Project                xunit                       [C#],F#,VB  Test/xUnit/Desktop/Web            
 ```
+
 Aucun ne semble correspondre a "projet Iteration/Test de type
 Console Application/Unit Test".
 
 On remarque au passage qu'il existe une recette `dotnet new gitignore`
 qui remplace notre propre gitignore qui contenanit juste
 
-```
+```bash
 obj/
 ```
 
@@ -148,7 +150,7 @@ est plus utile, notamment `dotnet sln add ***.csproj` est necessaire.
 
 On tape
 
-```
+```bash
 dotnet sln add core-dotnet.csproj 
 dotnet sln add tests/tests.csproj
 ```
@@ -168,7 +170,8 @@ En redemarrant VSCode, le rouge s'enleve donc on part
 du principe que la creation du projet de tests fonctionne.
 
 Commandes a garder en tete
-```
+
+```bash
 dotnet new classlib --framework net8.0 
 dotnet new mstest --framework net8.0
 dotnet reference add FlappyCore/FlappyCore.csproj --project FlappyCore.Tests/FlappyCore.Tests.csproj --framework net8.0
@@ -181,9 +184,7 @@ La page de reference pour les tests https://learn.microsoft.com/en-us/dotnet/cor
 
 Creer dependance de godot au projet core
 ---
- 
 
-```
+```bash
 dotnet reference add ../core-dotnet/FlappyCore/FlappyCore.csproj  --project Nouveau\ projet\ de\ jeu.csproj
 ```
-
