@@ -58,9 +58,6 @@ public partial class Root : Node2D
 	{
 
 		base._Process(delta);
-		// GD.Print("Mon comp ready");
-		// this.Translate();
-
 
 		// convertir le Vector2 de Csharp vers celui de Godot
 		// dans notre moteur le Y croit vers le haut
@@ -78,7 +75,6 @@ public partial class Root : Node2D
 
 		// notre moteur fonctionne en secondes
 		_core_flappy.Tick((float)delta);
-
 	}
 
 	public override void _Input(InputEvent @event)
