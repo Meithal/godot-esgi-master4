@@ -3,13 +3,13 @@
 [TestClass]
 public sealed class TestToto
 {
-    private readonly ClassFlappy _classFlappy = new ClassFlappy();
+    private readonly Flappy _classFlappy = new Flappy();
 
     [TestMethod]
     public void TestTotoWorks()
     {
 
-        Assert.AreEqual("toto", ClassFlappy.Toto());
+        Assert.AreEqual("toto", Flappy.Toto());
     }
 
     [TestMethod]

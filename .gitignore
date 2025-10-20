@@ -1,2 +1,29 @@
 .vscode/
 .DS_Store
+*.db
+godot/.vs/Nouveau projet de jeu/FileContentIndex/d961f1d8-6584-4952-a993-3a0dbc6a0f58.vsidx
+godot/.vs/Nouveau projet de jeu/v17/.futdcache.v2
+godot/.vs/Nouveau projet de jeu/v17/.suo
+godot/.vs/Nouveau projet de jeu/v17/DocumentLayout.json
+godot/.vs/ProjectEvaluation/nouveau projet de jeu.metadata.v9.bin
+godot/.vs/ProjectEvaluation/nouveau projet de jeu.projects.v9.bin
+godot/.vs/ProjectEvaluation/nouveau projet de jeu.strings.v9.bin
+
+# =======================================
+# Unity .gitignore (2025)
+# =======================================
+
+# --- Unity generated files ---
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+UserSettings/
+MemoryCaptures/
+SysInfo/
+
+# --- Asset Meta Data ---
+# Do not ignore .meta files
+!*.meta
