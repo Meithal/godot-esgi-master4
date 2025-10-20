@@ -8,3 +8,22 @@ godot/.vs/Nouveau projet de jeu/v17/DocumentLayout.json
 godot/.vs/ProjectEvaluation/nouveau projet de jeu.metadata.v9.bin
 godot/.vs/ProjectEvaluation/nouveau projet de jeu.projects.v9.bin
 godot/.vs/ProjectEvaluation/nouveau projet de jeu.strings.v9.bin
+
+# =======================================
+# Unity .gitignore (2025)
+# =======================================
+
+# --- Unity generated files ---
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+UserSettings/
+MemoryCaptures/
+SysInfo/
+
+# --- Asset Meta Data ---
+# Do not ignore .meta files
+!*.meta
