@@ -1,4 +1,5 @@
-# Cours
+Cours
+===
 
 Apprentissage supervise, semi supervise
 ---
