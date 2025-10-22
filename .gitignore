@@ -1,5 +1,10 @@
+# ignore IDE
 .vscode/
+
+# ignore Mac
 .DS_Store
+
+# ignore Godot
 *.db
 godot/.vs/Nouveau projet de jeu/FileContentIndex/d961f1d8-6584-4952-a993-3a0dbc6a0f58.vsidx
 godot/.vs/Nouveau projet de jeu/v17/.futdcache.v2
@@ -27,3 +32,11 @@ SysInfo/
 # --- Asset Meta Data ---
 # Do not ignore .meta files
 !*.meta
+
+# ignore python
+
+venv/
+__pycache__/
+
+# graphviz
+*.gv 

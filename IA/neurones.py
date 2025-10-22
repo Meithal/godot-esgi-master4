@@ -20,15 +20,15 @@ class SetDeque(Generic[T]):
             return
         self._set.add(value)
         self._deque.append(value)
-    
+
     def pop(self) -> T:
         value = self._deque.pop()
         self._set.remove(value)
         return value
-    
+
     def __iter__(self) -> Iterator[T]:
         return iter(self._deque)
-        
+
     def __len__(self):
         return len(self._deque)
 
@@ -37,12 +37,17 @@ class Neurone:
     biais: float = 0.0
     entrees: list['Connexion']
     sorties: list['Connexion']
+    _value: float = 0.0
 
-    def __init__(self, name : str, seuil: float = 0):
+    def __init__(self, name : str, seuil: float = 0) -> None:
         self.name = name
         self.entrees = []
         self.sorties = []
         self.biais = seuil
+        self._value = 0.0            
+    
+    def __str__(self) -> str:
+        return self.name + ":" + str(self._value)
 
     def is_entry(self) -> bool:
         for e in self.entrees:
@@ -57,26 +62,49 @@ class Neurone:
         return False
 
 
-    def compute_sortie(self):
-        pass
+    def value(self) -> float:
+        return self._value
 
 class Connexion:
     """
-    Une connexion entre deux neurone. Les neurones ont une valeur codee en dur
+    Une connexion entre deux neurone. 
+    Si il s'agit d'un neurone d'entree (rétine), sa valeur est codée en dur,
+    sinon on va chercher la valeur dans le neurone parent, qui
+    transmet la meme valeur a tous ses enfants, en modulant en fonction de son poids
     """
-    value: float  # cette valeur est calculée par le neurone amont, ou bien mise en dur quand il s'agit d'un neurone d'entree
+    _value: float | None  # cette valeur est calculée par le neurone amont, ou bien mise en dur quand il s'agit d'un neurone d'entree
     amont: Neurone | None  # les neurone de premiere couche n'ont pas d'entree, ils ont juste une valeur intrinseque
-    aval: Neurone  # le neurone cible
+    aval: Neurone | None  # le neurone cible
     poids: float  # le biais donné a cette liaison, soit inhibée, soit stimulée
 
-    def __init__(self, value, amont, aval, poids = 1.0):
-        self.value = value
+    def __init__(
+            self, value: float | None, 
+            amont : Neurone | None, 
+            aval : Neurone | None, 
+            poids = 1.0):
+        self._value = value
         self.amont = amont
         self.aval = aval
         self.poids = poids
 
-        self.amont.sorties += [self]
-        self.aval.entrees += [self]
+        if self.amont:
+            self.amont.sorties += [self]
+        if self.aval:
+            self.aval.entrees += [self]
+
+        "On est soit un neurone d'entree donc on a pas de parent "
+        "et sa valeur est intinseque, soit on a un parent, "
+        "mais pas les deux a la fois"
+        assert (self._value is not None) ^ (self.amont is not None)
+        
+    def value(self) -> float:
+        # si on est un neurone d'entree, on retourne sa veleur interne
+        if self._value:
+            return self._value * self.poids
+
+        if self.amont:
+            return self.amont.value()
+        return 0
 
 class Reseau:
     """
@@ -84,6 +112,7 @@ class Reseau:
     """
     name: str = "Reseau de neurones"
     neurones : list[Neurone]
+    connexions : list[Connexion]
     entrees : list[Neurone]
     sorties : list[Neurone]
 
@@ -91,6 +120,12 @@ class Reseau:
         self.neurones = []
         self.entrees = []
         self.sorties = []
+        self.connexions = []
+    
+    def __str__(self) -> str:
+        return "Neurones: " + str(len(self.neurones))+" Sorties: " \
+        + ", ".join(str(s) for s in self.sorties)
+
 
     def compute_entries(self) -> None:
         for n in self.neurones:
@@ -107,14 +142,13 @@ class Reseau:
     def zero_entries(self) -> None:
         for n in self.entrees:
             for e in n.entrees:
-                e.value = 0
+                e._value = 0
 
     def ajout_neurone(self, neurone: Neurone):
         self.neurones += [neurone]
     
-    def ajout_relation(self, neurone: Neurone, amont: Neurone):
-        pass
-        # neurone.ajout_liaison(amont)
+    def ajout_relation(self, neurone: Neurone, amont: Neurone | None, value: float | None = None):
+        self.connexions.append(Connexion(value, amont=amont, aval=neurone))
 
     def get_neuron(self, at: int):
         return self.neurones[at]
@@ -132,33 +166,41 @@ class Reseau:
             t = 0.0
 
             for e in n.entrees:
-                t += e.value * e.poids  # somme toutes les entrees
+                t += e.value() * e.poids  # somme toutes les entrees
+            n._value = t  # met la valeur qu'on vient de calculer sur soi
             for s in n.sorties:
-                s.value = t  # met la valeur qu'on vient de calculer sur ses sorties
-                next_neurons.append(s.aval) # on met la couche suivante
-            
+                if s.aval is not None:
+                    next_neurons.append(s.aval) # on met la couche suivante
+
 
 def mcculloch_pitts_neuron(entries: int, seuil = 0) -> Reseau:
-    """1946 :
+    """1943 :
     verifie simplement que la somme des poids est
     superieure a un seuil, le seuil est
     fixe manuellement."""
-    """tous les dendrites ont un poids de 1 (booleen),
+    """tous les dendrites ont un poids de 1,
     on verifie juste que somme inputs > seuil.
-    En 1946 il n'y avait pas d'ordinateur grand
-    public donc il s'agissait d'un montage electronique,
-    comme le perceptron de rosenblatt. Ce n'est donc
-    pas un systeme capable de se modifier lui meme."""
+    Il s'agissait d'un montage electronique,
+    ou on devait regler le seuil manuellement."""
     reseau = Reseau()
+
+    # entrees
     for i in range(entries):
         neuron = Neurone(str(i+1), seuil=0)
         reseau.ajout_neurone(neuron)
+        reseau.ajout_relation(neurone=neuron, amont=None, value=0)
     
     # neurone de sortie
     sortie = Neurone("OUT", seuil=seuil)
     reseau.ajout_neurone(sortie)
+    reseau.connexions.append(Connexion(None, amont=sortie, aval=None))
+
+    # liaisons
     for i in range(entries):
         reseau.ajout_relation(sortie, reseau.get_neuron(i))
+
+    reseau.compute_entries()
+    reseau.compute_sorties()
 
     return reseau
 
@@ -181,34 +223,27 @@ def rosenblatt_perceptron(entries: int) -> Reseau:
 
     return reseau
 
-def dl_or():
-    def _chech_error(inputs, reseau):
-        pass
-
-    inputs = [[0, 0], [0, 1], [1, 0], [1, 1]]
-    results = [0, 1, 1, 1]
-
-    pente = 1.0
-    biais = 0.0
-
-    res = rosenblatt_perceptron(4)
-
 class TestPittsMacCulloch(unittest.TestCase):
     def test_pitts(self) -> None:
-        """Test un reseau qui simule le or, ici la somme doit
-        juste etre plus grande ou egale que 1."""
+        """Test un reseau qui simule le or, ici la somme doit juste etre plus grande ou egale que 1."""
 
         BATCH = 10
 
         test_or = mcculloch_pitts_neuron(entries=BATCH, seuil=1)
+        
+        "On test un neurone qui simule le OR, en mettant"
+        "chaque dendrite a 1 successivement"
         for entree in test_or.entrees:
             test_or.zero_entries()
-            #entree.
-            entree.entrees[0].value = 1
-
             test_or.fire()
 
-            self.assertEqual(test_or.sorties[0], 1)
+            self.assertEqual(test_or.sorties[0].value(), 0)
+
+            test_or.zero_entries()
+            entree.entrees[0]._value = 1
+            test_or.fire()
+
+            self.assertEqual(test_or.sorties[0].value(), 1)
 
 
 def main():
