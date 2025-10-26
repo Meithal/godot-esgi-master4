@@ -7,4 +7,5 @@ title = 'Accueil'
 Ici sont mis les differentes etapes de la realisation du projet.
 
 - [Installation initiale de l'architecture du projet](rapport/install-dotnet-infrastructure)
+- [IA](rapport/ia)
 

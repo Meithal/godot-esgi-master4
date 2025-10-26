@@ -1,5 +1,6 @@
 # ignore IDE
 .vscode/
+.idea/
 
 # ignore Mac
 .DS_Store

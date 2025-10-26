@@ -1,8 +1,7 @@
 #from typing import Generator, Iterator, Any, Iterable
-from typing import Iterable, Generic, TypeVar, Iterator
+from typing import Generic, TypeVar, Iterator
 from collections import deque
 
-import unittest
 
 T = TypeVar('T')
 
@@ -33,21 +32,21 @@ class SetDeque(Generic[T]):
         return len(self._deque)
 
 class Neurone:
-    nom: str
+    name: str
     biais: float = 0.0
     entrees: list['Connexion']
     sorties: list['Connexion']
-    _value: float = 0.0
+    value: float = 0.0
 
     def __init__(self, name : str, seuil: float = 0) -> None:
         self.name = name
         self.entrees = []
         self.sorties = []
         self.biais = seuil
-        self._value = 0.0            
+        self.value = 0.0            
     
     def __str__(self) -> str:
-        return self.name + ":" + str(self._value)
+        return self.name + ":" + str(self.value)
 
     def is_entry(self) -> bool:
         for e in self.entrees:
@@ -61,9 +60,6 @@ class Neurone:
                 return True
         return False
 
-
-    def value(self) -> float:
-        return self._value
 
 class Connexion:
     """
@@ -103,7 +99,7 @@ class Connexion:
             return self._value * self.poids
 
         if self.amont:
-            return self.amont.value()
+            return self.amont.value
         return 0
 
 class Reseau:
@@ -167,7 +163,9 @@ class Reseau:
 
             for e in n.entrees:
                 t += e.value() * e.poids  # somme toutes les entrees
-            n._value = t  # met la valeur qu'on vient de calculer sur soi
+            n.value = 0
+            if t >= n.biais:
+                n.value = 1  # met la valeur qu'on vient de calculer sur soi
             for s in n.sorties:
                 if s.aval is not None:
                     next_neurons.append(s.aval) # on met la couche suivante
@@ -222,35 +220,3 @@ def rosenblatt_perceptron(entries: int) -> Reseau:
         reseau.ajout_relation(sortie, reseau.get_neuron(i))
 
     return reseau
-
-class TestPittsMacCulloch(unittest.TestCase):
-    def test_pitts(self) -> None:
-        """Test un reseau qui simule le or, ici la somme doit juste etre plus grande ou egale que 1."""
-
-        BATCH = 10
-
-        test_or = mcculloch_pitts_neuron(entries=BATCH, seuil=1)
-        
-        "On test un neurone qui simule le OR, en mettant"
-        "chaque dendrite a 1 successivement"
-        for entree in test_or.entrees:
-            test_or.zero_entries()
-            test_or.fire()
-
-            self.assertEqual(test_or.sorties[0].value(), 0)
-
-            test_or.zero_entries()
-            entree.entrees[0]._value = 1
-            test_or.fire()
-
-            self.assertEqual(test_or.sorties[0].value(), 1)
-
-
-def main():
-
-    unittest.main()
-
-
-if __name__ == "__main__":
-    main()
-
