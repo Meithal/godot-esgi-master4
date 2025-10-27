@@ -88,7 +88,7 @@ digraph "Reseau de neurones" {
 	2 -> OUT [label=0.0]
 	3 -> OUT [label=0.0]
 	4 -> OUT [label=0.0]
-    -> 1 [label=entree]
+	-> 1 [label=entree]
 }
 ```
 
@@ -108,3 +108,7 @@ De la meme façon il n'est pas possible de simuler un
 noeud logique NOT avec ce systeme vu qu'on fait une somme
 et on verifie seulement que la valeur de sortie
 est superieure ou egale a la velur de seuil.
+
+On doit donc ajouter de la ponderation a chaque connexion (axone),
+cette pondération doit nécessairement pouvoir prendre une valeur négative
+si l'on souhaite pourvoir simuler une porte NON.
