@@ -26,7 +26,7 @@ public partial class Root : Node2D
 
 		GD.Print("Mon comp ready");
 		GD.Print("Mon comp ready2");
-		GD.Print(Flappy.Toto());
+		//GD.Print(Flappy.Toto());
 
 		_core_flappy = Flappy.CreateWithDimension(_width, _height, _num_obsacles, _padding);
 

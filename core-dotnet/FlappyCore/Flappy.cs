@@ -19,14 +19,6 @@ internal class FlyingBird
 
 public class Flappy
 {
-    #region Toto
-    public static string Toto()
-    {
-        return "toto";
-    }
-
-    #endregion
-
     #region Flappy
     private readonly float[] _obstacles;
     private readonly float _width;
@@ -105,7 +97,6 @@ public class Flappy
     {
         _bird.Speed = new Vector2(_bird.Speed.X, _bird.Speed.Y + 7);
     }
-
 
     private bool CheckCollision(Vector2 posAvant, Vector2 posApres)
     {
