@@ -37,7 +37,5 @@ SysInfo/
 # ignore python
 
 venv/
-__pycache__/
-
-# graphviz
-*.gv 
+__pycache__
+*.pyc

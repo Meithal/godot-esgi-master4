@@ -34,21 +34,28 @@ class TestPittsMacCulloch(unittest.TestCase):
         test_and.zero_entries()
 
         test_and.fire()
+        # graph.dessine_reseau(reseau=test_and)
 
         self.assertEqual(test_and.sorties[0].value, 0)
 
         test_and.entrees[0].entrees[0]._value = 1
 
         test_and.fire()
-        # graph.dessine_reseau(reseau=test_and)
 
         self.assertEqual(test_and.sorties[0].value, 0)
 
-        for i, entree in enumerate(test_and.entrees):
+        for entree in test_and.entrees:
             entree.entrees[0]._value = 1
 
         test_and.fire()
         self.assertEqual(test_and.sorties[0].value, 1)
+
+    def test_rosenblatt_or(self) -> None:
+        BATCH = 10
+
+        test_and = neurones.rosenblatt_perceptron(entries=BATCH)
+        test_and.zero_entries()
+
 
 def main():
 

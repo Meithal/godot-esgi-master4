@@ -52,8 +52,8 @@ namespace FlappyCore
             _width = width;
             _height = height;
 
-            game = Flappy.CreateWithDimension(_width, _height, _worldObstacleCount, _padding);
-            game.GenerateObstaclesValues(42);
+            game = Flappy.CreateWithDimension(_width, _height, _worldObstacleCount, 1.2f, _padding, 42);
+            game.GenerateObstaclesValues(10);
             GameTime = 0f;
             return new OutputData(MAX_VISIBLE_OBSTACLES);
         }
@@ -97,8 +97,8 @@ namespace FlappyCore
         public void Reset()
         {
             GameTime = 0f;
-            game = Flappy.CreateWithDimension(_width, _height, _worldObstacleCount, _padding);
-            game.GenerateObstaclesValues(42);
+            game = Flappy.CreateWithDimension(_width, _height, _worldObstacleCount, 1.2f, _padding, 42);
+            game.GenerateObstaclesValues(10);
         }
     }
 }

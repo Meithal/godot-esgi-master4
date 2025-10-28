@@ -27,21 +27,28 @@ public class Flappy
     private readonly float _padding; // l espace avant de commencer a dessiner les obstacles
     private readonly FlyingBird _bird;
     private readonly float _ecart_obstacles;
+    private readonly Random _rand;
+    private readonly int _initial_seed;
 
-    private Flappy(float height, float width, int num_obstacles, float padding)
+    private int _obstacle_cursor = 0;
+
+    private Flappy(float height, float width, int num_obstacles, float ecart_obstacle, float padding, int seed)
     {
         _height = height;
         _width = width;
         _obstacles = new float[num_obstacles];
         _num_obstacles = num_obstacles;
         _padding = padding;
-        _ecart_obstacles = (_width - 2 * _padding) / _num_obstacles;
+        _ecart_obstacles = ecart_obstacle;
         _bird = new FlyingBird
         {
             Acceleration = new Vector2(0, -9.81f),
-            Speed = new Vector2(1.4f, 0),
+            Speed = new Vector2(1.6f, 0),
             Position = new Vector2(Math.Min(width, 0.1f), height / 2)
         };
+
+        _rand = new Random(seed);
+        _initial_seed = seed;
     }
 
     private void ResetBird()
@@ -67,20 +74,21 @@ public class Flappy
      * et l'espace qu'il y a apres le dernier obstacle.
      */
     public static Flappy CreateWithDimension(
-        float width, float height, int num_obstacles, float padding
+        float width, float height, int num_obstacles, float ecart_obstacle, float padding, int seed
     )
     {
-        return new Flappy(height, width, num_obstacles, padding);
+        return new Flappy(height, width, num_obstacles, ecart_obstacle, padding, seed);
     }
 
-    public void GenerateObstaclesValues(int seed)
+    public void GenerateObstaclesValues(int quantity)
     {
-        var rand = new Random(seed);
-
-        for (int i = 0; i < _num_obstacles; i++)
+        for (int i = 0; i < quantity; i++)
         {
-            _obstacles[i] = (float)rand.NextDouble();
+            _obstacles[(i + _obstacle_cursor)%_num_obstacles] = (float)_rand.NextDouble();
         }
+
+        _obstacle_cursor += quantity;
+        _obstacle_cursor %= _num_obstacles;
     }
 
     public float GetObstacle(int which)

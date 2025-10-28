@@ -184,7 +184,7 @@ def mcculloch_pitts_neuron(entries: int, seuil = 0) -> Reseau:
 
     # entrees
     for i in range(entries):
-        neuron = Neurone(str(i+1), seuil=0)
+        neuron = Neurone(str(i+1), seuil=0.1)
         reseau.ajout_neurone(neuron)
         reseau.ajout_relation(neurone=neuron, amont=None, value=0)
     

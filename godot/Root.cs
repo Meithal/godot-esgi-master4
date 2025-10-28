@@ -10,7 +10,8 @@ public partial class Root : Node2D
 	[Export] private float _speed = 1f;
 	[Export] private float _width = 1000;
 	[Export] private float _height = 10.8f; // en mn 
-	[Export] private int _num_obsacles = 100;
+	[Export] private int _num_obsacles = 6;
+	[Export] private float _ecart_obstacles = 1.2f;
 	[Export] private float _padding = 2;
 	private float time = 1f;
 
@@ -28,9 +29,9 @@ public partial class Root : Node2D
 		GD.Print("Mon comp ready2");
 		//GD.Print(Flappy.Toto());
 
-		_core_flappy = Flappy.CreateWithDimension(_width, _height, _num_obsacles, _padding);
+		_core_flappy = Flappy.CreateWithDimension(_width, _height, _num_obsacles, _ecart_obstacles, _padding, new Random().Next());
 
-		_core_flappy.GenerateObstaclesValues(new Random().Next());
+		_core_flappy.GenerateObstaclesValues(10);
 
 		var canvas = GetNode<ColorRect>("%Canvas");
 		canvas.GrowVertical = Control.GrowDirection.Begin;
@@ -48,7 +49,7 @@ public partial class Root : Node2D
 
 				var h = _height * PIXELS_PER_M * value;
 				bar.Size = new Vector2(8, h);
-				bar.Position = new Vector2(_padding * PIXELS_PER_M + i * (_width - 2 * _padding), _height * PIXELS_PER_M - h);
+				bar.Position = new Vector2(_padding * PIXELS_PER_M + i * _ecart_obstacles, _height * PIXELS_PER_M - h);
 				canvas.AddChild(bar);
 			}
 		}
