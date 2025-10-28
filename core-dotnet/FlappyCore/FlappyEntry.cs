@@ -47,6 +47,8 @@ namespace FlappyCore
         {
             game = new Flappy2(
                 numObstacles,
+                obstacleSize: 10f,
+                obstacleSpacing: 50f,
                 gravity,
                 obstacleSpeed,
                 birdRadius,

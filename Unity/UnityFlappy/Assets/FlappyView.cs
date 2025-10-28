@@ -15,28 +15,40 @@ public class FlappyView : MonoBehaviour
     public float BirdOffsetX = 0f;
     public float BirdSpeed = 1.4f;
     public float MinY = 0f;
-    public float MaxY = 10f;
+    public float MaxY = 100f;
 
     private FlappyEntry flappy;
     private OutputData output;
     private GameObject bird;
-    private GameObject[] obstacles;
+    private GameObject[] obstaclesBottom;
+    private GameObject[] obstaclesTop;
     private float worldScrollX = 0f;
 
     void Start()
     {
         if (Origin == null) Origin = transform;
 
+        // Initialise Flappy2 via FlappyEntry
         flappy = new FlappyEntry();
-        output = flappy.Init(100f, MaxY - MinY);
+        output = flappy.Init(
+            numObstacles: 20,
+            gravity: 100f,
+            obstacleSpeed: 40f,
+            birdRadius: 2f,
+            seed: 42
+        );
 
+        // Crée l’oiseau
         bird = Instantiate(BirdPrefab, Origin);
         bird.transform.localPosition = new Vector3(BirdOffsetX, MapY(output.FlappyHeight), 0f);
 
-        obstacles = new GameObject[FlappyEntry.MAX_VISIBLE_OBSTACLES];
-        for (int i = 0; i < obstacles.Length; i++)
+        // Crée un GameObject pour chaque obstacle bas
+        obstaclesBottom = new GameObject[output.Obstacles.Length];
+        obstaclesTop = new GameObject[output.Obstacles.Length];
+        for (int i = 0; i < output.Obstacles.Length; i++)
         {
-            obstacles[i] = Instantiate(ObstaclePrefab, Origin);
+            obstaclesBottom[i] = Instantiate(ObstaclePrefab, Origin);
+            obstaclesTop[i] = Instantiate(ObstaclePrefab, Origin);
         }
     }
 
@@ -48,7 +60,10 @@ public class FlappyView : MonoBehaviour
             DeltaTime = Time.deltaTime
         };
 
-        try { flappy.Update(in input, ref output); }
+        try
+        {
+            flappy.Update(in input, ref output);
+        }
         catch (System.Exception ex)
         {
             Debug.LogError("[FlappyView] FlappyEntry.Update failed: " + ex.Message);
@@ -62,18 +77,31 @@ public class FlappyView : MonoBehaviour
         if (bird != null)
             bird.transform.localPosition = new Vector3(BirdOffsetX, MapY(output.FlappyHeight), 0f);
 
-        // Obstacles bougent à gauche selon le scroll du monde
+        float obstacleWidth = 10f;
+        float gap = 30f; // espace entre le bas et le haut
+
         for (int i = 0; i < output.Obstacles.Length; i++)
         {
             var o = output.Obstacles[i];
-            var go = obstacles[i];
-            if (go == null) continue;
+            float xPos = (o.X - worldScrollX) * UnitsPerMeter;
 
-            float screenX = (o.X - worldScrollX) * UnitsPerMeter;
-            float screenY = MapY(o.Y);
+            // --- TUBE BAS ---
+            float bottomHeight = o.Y;
+            float bottomCenterY = bottomHeight / 2f;
+            obstaclesBottom[i].transform.localScale = new Vector3(obstacleWidth, MapY(bottomHeight) / 2f, obstacleWidth);
+            obstaclesBottom[i].transform.localPosition = new Vector3(xPos, MapY(bottomCenterY), 0f);
 
-            go.SetActive(true);
-            go.transform.localPosition = new Vector3(screenX, screenY, 0f);
+            // --- TUBE HAUT ---
+            float topHeight = bottomHeight + gap;              // Hauteur du tube haut
+            float topCenterY = bottomHeight + bottomCenterY + gap;    // Centre du cylindre
+
+            obstaclesTop[i].transform.localScale = new Vector3(obstacleWidth, MapY(bottomHeight) / 2f, obstacleWidth);
+            obstaclesTop[i].transform.localPosition = new Vector3(
+                xPos,
+                MapY(topCenterY),
+                0f
+            );
+
         }
     }
 
