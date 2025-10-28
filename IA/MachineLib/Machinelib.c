@@ -101,8 +101,8 @@ void train_perceptron(Model *model, double **X, int *Y, int n_samples) {
         printf("Epoch %d: errors = %d\n", epoch + 1, errors);
     }
 
-    printf("Final Rosenblatt bias = %f\n", model->b);
-    printf("Final Rosenblatt weights: ");
+    printf("Final bias = %f\n", model->b);
+    printf("Final weights: ");
     for(int j = 0; j < model->input_size; j++)
         printf("%f ", model->w[j]);
     printf("\n");

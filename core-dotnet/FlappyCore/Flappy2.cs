@@ -114,6 +114,11 @@ namespace FlappyCore
 
                 _obstacles[i] = obs;
             }
+
+            if(CheckCollision())
+            {
+                Reset();
+            }
         }
 
         private float GetMaxObstacleX()
@@ -128,7 +133,7 @@ namespace FlappyCore
         // --- Interaction ---
         public void Flap()
         {
-            _bird.Speed = new Vector2(0f, 10f);
+            _bird.Speed = new Vector2(0f, 50f);
         }
 
         public void Reset()
@@ -141,19 +146,37 @@ namespace FlappyCore
         // --- Collision ---
         public bool CheckCollision()
         {
+            const float GAP_SIZE = 30f; // Espace libre entre le haut et le bas
+            const float WORLD_HEIGHT = 100f; // Hauteur totale de la zone de jeu
+
             foreach (var obs in _obstacles)
             {
-                // On calcule la distance entre l’oiseau et l’obstacle
+                // Distance horizontale entre l'oiseau et le centre du tuyau
                 float dx = obs.X - _bird.Position.X;
-                float dy = obs.Y - _bird.Position.Y;
-                float dist = (float)Math.Sqrt(dx * dx + dy * dy);
 
-                // Collision si la sphère touche le centre de l’obstacle
-                if (dist < _bird.Radius + _obstacleSize * 0.5f)
+                // Si trop loin, on ignore
+                if (Math.Abs(dx) > _obstacleSize + _bird.Radius)
+                    continue;
+
+                // Calcul des limites du trou
+                float gapBottom = obs.Y;
+                float gapTop = obs.Y + GAP_SIZE;
+
+                // Position verticale de l’oiseau
+                float birdY = _bird.Position.Y;
+
+                // Collision si l’oiseau sort du trou
+                if (birdY - _bird.Radius < gapBottom || birdY + _bird.Radius > gapTop)
                     return true;
             }
 
+            // Collision avec le sol ou le plafond
+            if (_bird.Position.Y - _bird.Radius < 0f || _bird.Position.Y + _bird.Radius > WORLD_HEIGHT)
+                return true;
+
             return false;
         }
+
+
     }
 }
