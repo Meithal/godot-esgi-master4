@@ -140,6 +140,10 @@ class Reseau:
             for e in n.entrees:
                 e._value = 0
 
+    def feed_entries(self, vals: list[float]) -> None:
+        for i, v in enumerate(vals):
+            self.entrees[i].entrees[0]._value = v
+
     def ajout_neurone(self, neurone: Neurone):
         self.neurones += [neurone]
     
@@ -157,6 +161,7 @@ class Reseau:
         next_neurons = SetDeque[Neurone]()
         for en in self.entrees:
             next_neurons.append(en)
+
         while next_neurons:
             n = next_neurons.pop()
             t = 0.0
@@ -169,6 +174,21 @@ class Reseau:
             for s in n.sorties:
                 if s.aval is not None:
                     next_neurons.append(s.aval) # on met la couche suivante
+
+    def fix(self) -> bool:
+        """Fixe les poids, en partant de la fin.
+        Essaye de modifier le poids en fonction de la gigue
+        Si on n'obtient pas d'amelioration de la fonction
+        d'erreur dans l'un ou l'autre sens, on reduit le pas de
+        la gigue. Si le signe de l'erreur change, on reduit le pas,
+        sinon on l'augmente.
+        
+        todo: minima locaux (annealed reheat?)
+        todo: penrose
+        """
+        pass
+
+        return True
 
 
 def mcculloch_pitts_neuron(entries: int, seuil = 0) -> Reseau:
