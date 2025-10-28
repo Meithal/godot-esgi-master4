@@ -55,6 +55,10 @@ namespace FlappyCore
                 seed
             );
 
+            /*
+                        game = Flappy.CreateWithDimension(_width, _height, _worldObstacleCount, 1.2f, _padding, 42);
+                        game.GenerateObstaclesValues(10);
+            */
             GameTime = 0f;
             return new OutputData(numObstacles);
         }
@@ -106,6 +110,10 @@ namespace FlappyCore
         {
             game?.Reset();
             GameTime = 0f;
+/*
+            game = Flappy.CreateWithDimension(_width, _height, _worldObstacleCount, 1.2f, _padding, 42);
+            game.GenerateObstaclesValues(10);
+*/
         }
     }
 }
