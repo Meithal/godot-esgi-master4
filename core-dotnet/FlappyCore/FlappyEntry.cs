@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 
 namespace FlappyCore
 {
@@ -22,42 +23,45 @@ namespace FlappyCore
         public float FlappyVerticalSpeed;
         public ObstacleData[] Obstacles;
 
-        public OutputData(int visibleObstacleCount)
+        public OutputData(int obstacleCount)
         {
             FlappyX = 0f;
             FlappyHeight = 0f;
             FlappyVerticalSpeed = 0f;
-            Obstacles = new ObstacleData[visibleObstacleCount];
+            Obstacles = new ObstacleData[obstacleCount];
         }
     }
 
     public class FlappyEntry
     {
-        public const int MAX_VISIBLE_OBSTACLES = 20;
-
-        private readonly int _worldObstacleCount = 20;
-        private float _width = 1000f;
-        private float _height = 10f;
-        private float _padding = 2f;
-        private Flappy game;
-
+        private Flappy2 game;
         public float GameTime { get; private set; }
-        public float Width => _width;
-        public float Height => _height;
-        public float Padding => _padding;
-        public int WorldObstacleCount => _worldObstacleCount;
 
-        public OutputData Init(float width = 1000f, float height = 10f)
+        // --- Initialisation ---
+        public OutputData Init(
+            int numObstacles = 20,
+            float gravity = 9.81f,
+            float obstacleSpeed = 15f,
+            float birdRadius = 2f,
+            int seed = 42)
         {
-            _width = width;
-            _height = height;
+            game = new Flappy2(
+                numObstacles,
+                gravity,
+                obstacleSpeed,
+                birdRadius,
+                seed
+            );
 
-            game = Flappy.CreateWithDimension(_width, _height, _worldObstacleCount, 1.2f, _padding, 42);
-            game.GenerateObstaclesValues(10);
+            /*
+                        game = Flappy.CreateWithDimension(_width, _height, _worldObstacleCount, 1.2f, _padding, 42);
+                        game.GenerateObstaclesValues(10);
+            */
             GameTime = 0f;
-            return new OutputData(MAX_VISIBLE_OBSTACLES);
+            return new OutputData(numObstacles);
         }
 
+        // --- Mise à jour ---
         public void Update(in InputData input, ref OutputData output)
         {
             if (game == null)
@@ -74,17 +78,22 @@ namespace FlappyCore
                 game.Tick(input.DeltaTime);
                 GameTime += input.DeltaTime;
 
-                var birdPos = game.GetBirdPosition();
+                // Position de l'oiseau
+                var birdPos = game.BirdPosition;
                 output.FlappyX = birdPos.X;
                 output.FlappyHeight = birdPos.Y;
-                output.FlappyVerticalSpeed = 0f;
+                output.FlappyVerticalSpeed = 0;
 
-                float ecart = (Width - 2 * Padding) / WorldObstacleCount;
-                for (int i = 0; i < MAX_VISIBLE_OBSTACLES; i++)
+                // Synchroniser le tableau d’obstacles avec celui du jeu
+                var obstacles = game.Obstacles;
+                if (output.Obstacles == null || output.Obstacles.Length != obstacles.Length)
+                    output.Obstacles = new ObstacleData[obstacles.Length];
+
+                for (int i = 0; i < obstacles.Length; i++)
                 {
-                    int idx = i % WorldObstacleCount;
-                    output.Obstacles[i].X = Padding + idx * ecart;
-                    output.Obstacles[i].Y = game.GetObstacle(idx) * Height;
+                    var obs = obstacles[i];
+                    output.Obstacles[i].X = obs.X;
+                    output.Obstacles[i].Y = obs.Y;
                     output.Obstacles[i].lifeTime += input.DeltaTime;
                 }
             }
@@ -94,11 +103,15 @@ namespace FlappyCore
             }
         }
 
+        // --- Reset ---
         public void Reset()
         {
+            game?.Reset();
             GameTime = 0f;
+/*
             game = Flappy.CreateWithDimension(_width, _height, _worldObstacleCount, 1.2f, _padding, 42);
             game.GenerateObstaclesValues(10);
+*/
         }
     }
 }
