@@ -22,6 +22,7 @@ namespace FlappyCore
         public float FlappyHeight;
         public float FlappyVerticalSpeed;
         public ObstacleData[] Obstacles;
+        public bool GameOver;
 
         public OutputData(int obstacleCount)
         {
@@ -85,6 +86,7 @@ namespace FlappyCore
                 output.FlappyX = birdPos.X;
                 output.FlappyHeight = birdPos.Y;
                 output.FlappyVerticalSpeed = 0;
+                output.GameOver = game.IsGameOver;
 
                 // Synchroniser le tableau d’obstacles avec celui du jeu
                 var obstacles = game.Obstacles;

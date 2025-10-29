@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 59b8043f54a675941ae9d6d3a01bb9de
+timeCreated: 1462575266
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 62565
+  packageName: Farland Skies - Simple Cumulus
+  packageVersion: 1.0
+  assetPath: Assets/SimpleCumulus/Skyboxes/PlainColor/Blue/SimpleCumulus_Blue_04/SimpleCumulus_Blue_04.mat
+  uploadId: 117352
