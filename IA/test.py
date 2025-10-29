@@ -50,11 +50,56 @@ class TestPittsMacCulloch(unittest.TestCase):
         test_and.fire()
         self.assertEqual(test_and.sorties[0].value, 1)
 
+    def test_pitts_matrix_or(self) -> None:
+        inputs = [[0.,0.], [0.,1.], [1.,0.], [1.,1.]]
+        outputs = [0, 1, 1, 1]
+
+        res = neurones.mcculloch_pitts_neuron(entries=2, seuil=1)
+
+        for i, inp in enumerate(inputs):
+            res.feed_entries(inp)
+            res.fire()
+            self.assertEqual(res.sorties[0].value, outputs[i])
+
+    def test_pitts_matrix_and(self) -> None:
+        inputs = [[0.,0.], [0.,1.], [1.,0.], [1.,1.]]
+        outputs = [0, 0, 0, 1]
+
+        res = neurones.mcculloch_pitts_neuron(entries=2, seuil=2)
+
+        for i, inp in enumerate(inputs):
+            res.feed_entries(inp)
+            res.fire()
+            self.assertEqual(res.sorties[0].value, outputs[i])
+
+    def test_pitts_rosenblatt_or(self) -> None:
+        inputs = [[0., 0.], [0.,1.], [1.,0.], [1.,1.]]
+        outputs = [0, 1, 1, 1]
+
+        res = neurones.mcculloch_pitts_neuron(entries=2, seuil=1)
+
+        for i, inp in enumerate(inputs):
+            res.feed_entries(inp)
+            res.fire()
+            self.assertEqual(res.sorties[0].value, outputs[i])
+
+    def test_pitts_rosenblatt_and(self) -> None:
+        inputs = [[0.,0.], [0.,1.], [1.,0.], [1.,1.]]
+        outputs = [0, 0, 0, 1]
+
+        res = neurones.mcculloch_pitts_neuron(entries=2, seuil=2)
+
+        for i, inp in enumerate(inputs):
+            res.feed_entries(inp)
+            res.fire()
+            self.assertEqual(res.sorties[0].value, outputs[i])
+
     def test_rosenblatt_or(self) -> None:
         BATCH = 10
 
         test_and = neurones.rosenblatt_perceptron(entries=BATCH)
         test_and.zero_entries()
+
 
 
 def main():
