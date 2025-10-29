@@ -51,3 +51,13 @@ A la louche on utilise un dataset 10 fois plus grand
 que le nombre d'inputs.
 
 https://colab.research.google.com/drive/1c3gi0d1NA2TBaqOpEQ-LzGqfJGvwMUuE?usp=sharing
+
+
+Normalisation standardisation
+---
+
+On adapte nots entrees a la fonction d'activation.
+
+Normalisation : (X - xmin) / (xmax - xmin) -> pour un pixel de 0 a 255 on fait valeur pixel / 255
+
+Standardisation : on soustrait la moyenne et on divise par l'ecart type

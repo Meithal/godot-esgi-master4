@@ -20,6 +20,9 @@ internal class FlyingBird
 public class Flappy
 {
     #region Flappy
+
+    public event Action OnDeath;
+
     private readonly float[] _obstacles;
     private readonly float _width;
     private readonly float _height;
@@ -27,10 +30,12 @@ public class Flappy
     private readonly float _padding; // l espace avant de commencer a dessiner les obstacles
     private readonly FlyingBird _bird;
     private readonly float _ecart_obstacles;
-    private readonly Random _rand;
+    private Random _rand;
     private readonly int _initial_seed;
 
     private int _obstacle_cursor = 0;
+
+    private bool _has_obstacle_been_passed = false;
 
     private Flappy(float height, float width, int num_obstacles, float ecart_obstacle, float padding, int seed)
     {
@@ -53,8 +58,11 @@ public class Flappy
 
     private void ResetBird()
     {
+        _rand = new Random(_initial_seed);
         _bird.Speed = new Vector2(1.4f, 0);
         _bird.Position = new Vector2(Math.Min(_width, 0.1f), _height / 2);
+        _obstacle_cursor = 0;
+        OnDeath?.Invoke();
     }
 
     public void Tick(float delta_time)
@@ -93,7 +101,7 @@ public class Flappy
 
     public float GetObstacle(int which)
     {
-        return _obstacles[which];
+        return _obstacles[(which + _obstacle_cursor) % _num_obstacles];
     }
 
     public Vector2 GetBirdPosition()
@@ -106,6 +114,11 @@ public class Flappy
         _bird.Speed = new Vector2(_bird.Speed.X, _bird.Speed.Y + 7);
     }
 
+    public bool HasObstacleBeenPassed()
+    {
+        return _has_obstacle_been_passed;
+    }
+
     private bool CheckCollision(Vector2 posAvant, Vector2 posApres)
     {
         if (posApres.Y < 0)
@@ -115,12 +128,19 @@ public class Flappy
 
         int nextObstacle = (int)((_bird.Position.X - _padding) / _ecart_obstacles);
 
+        var has_obstacle_been_passed = posAvant.X <= _padding + nextObstacle * _ecart_obstacles
+            && posApres.X > _padding + nextObstacle * _ecart_obstacles;
+
         if (
-            posAvant.X <= _padding + nextObstacle * _ecart_obstacles
-            && posApres.X > _padding + nextObstacle * _ecart_obstacles
-            && posApres.Y < _obstacles[nextObstacle] * _height
+            has_obstacle_been_passed
+            && posApres.Y < _obstacles[(nextObstacle + _obstacle_cursor) % _num_obstacles] * _height
         )
+        {
+            //_obstacle_cursor++;
             return true;
+        }
+
+        _has_obstacle_been_passed = has_obstacle_been_passed; // on ne veut pas considerer un obstacle passé si on meurt
 
         return false;
     }

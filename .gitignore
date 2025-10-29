@@ -39,3 +39,7 @@ SysInfo/
 venv/
 __pycache__
 *.pyc
+
+*.exe
+*.dll
+*.suo

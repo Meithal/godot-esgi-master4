@@ -21,9 +21,16 @@ public partial class Root : Node2D
 
 	private Node2D _godot_bird;
 
+	private bool _has_obstacle_been_passed = false;
+
+	private int _obstacles_passes = 0;
+
+	private ColorRect _canvas;
+
 	public override void _Ready()
 	{
 		base._Ready();
+
 
 		GD.Print("Mon comp ready");
 		GD.Print("Mon comp ready2");
@@ -33,26 +40,16 @@ public partial class Root : Node2D
 
 		_core_flappy.GenerateObstaclesValues(10);
 
-		var canvas = GetNode<ColorRect>("%Canvas");
-		canvas.GrowVertical = Control.GrowDirection.Begin;
+		_canvas = GetNode<ColorRect>("%Canvas");
+		_canvas.GrowVertical = Control.GrowDirection.Begin;
 
-		canvas.Size = new Vector2(_width * PIXELS_PER_M, _height * PIXELS_PER_M);
+		_canvas.Size = new Vector2(_width * PIXELS_PER_M, _height * PIXELS_PER_M);
 
 		_godot_bird = GetNode<Node2D>("%Bird");
 
-		{
-			for (int i = 0; i < _num_obsacles; i++)
-			{
-				var bar = new ColorRect();
-				float value = _core_flappy.GetObstacle(i);
-				bar.Color = Colors.Red;
+		_drawObstacles(_obstacles_passes, _canvas);
 
-				var h = _height * PIXELS_PER_M * value;
-				bar.Size = new Vector2(8, h);
-				bar.Position = new Vector2(_padding * PIXELS_PER_M + i * _ecart_obstacles, _height * PIXELS_PER_M - h);
-				canvas.AddChild(bar);
-			}
-		}
+		_core_flappy.OnDeath += _onDeath;
 	}
 
 	public override void _Process(double delta)
@@ -65,8 +62,9 @@ public partial class Root : Node2D
 		// l'unite de godot par defaut est de 100 pixels par metre
 		var pos = _core_flappy.GetBirdPosition();
 		_godot_bird.Position = new Godot.Vector2(
-			pos.X * PIXELS_PER_M, (_height  -pos.Y)  * PIXELS_PER_M
+			pos.X * PIXELS_PER_M, (_height - pos.Y) * PIXELS_PER_M
 		);
+
 	}
 
 	// le delta est en secondes
@@ -76,6 +74,10 @@ public partial class Root : Node2D
 
 		// notre moteur fonctionne en secondes
 		_core_flappy.Tick((float)delta);
+
+		if (_core_flappy.HasObstacleBeenPassed()) {
+			_dealWithObstaclePassed();
+		}
 	}
 
 	public override void _Input(InputEvent @event)
@@ -93,7 +95,7 @@ public partial class Root : Node2D
 			GetTree().Root.PropagateNotification((int)NotificationWMCloseRequest);
 		}
 	}
-	
+
 	public override void _Notification(int what)
 	{
 		if (what == NotificationWMCloseRequest)
@@ -101,4 +103,45 @@ public partial class Root : Node2D
 			GetTree().Quit(); // default behavior
 		}
 	}
+
+	private void _dealWithObstaclePassed()
+	{
+		GD.Print("pass");
+		_obstacles_passes++;
+		_core_flappy.GenerateObstaclesValues(1);
+		_drawObstacles(_obstacles_passes, _canvas);
+	}
+
+	private void _drawObstacles(int start, ColorRect canvas)
+	{
+		{
+			var children = canvas.GetChildren();
+			foreach (var c in children)
+			{
+				if (c is ColorRect)
+					c.Free();
+			}
+			for (int i = 0; i < _num_obsacles; i++)
+			{
+				var bar = new ColorRect();
+				float value = _core_flappy.GetObstacle(i);
+				bar.Color = Colors.Red;
+
+				var h = _height * PIXELS_PER_M * value;
+				bar.Size = new Vector2(8, h);
+				bar.Position = new Vector2(
+					_padding * PIXELS_PER_M
+						+ (i + start) * _ecart_obstacles * PIXELS_PER_M,
+					_height * PIXELS_PER_M - h);
+				canvas.AddChild(bar);
+			}
+		}
+	}
+	
+	private void _onDeath()
+    {
+		GD.Print("RIP");
+		_obstacles_passes = 0;
+		_drawObstacles(0, _canvas);
+    }
 }
