@@ -39,3 +39,12 @@ SysInfo/
 venv/
 __pycache__
 *.pyc
+
+
+# Visual Studio
+.vs/
+*.vsix
+*.user
+*.suo
+*.vssscc
+*.vsidx

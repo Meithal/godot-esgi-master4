@@ -5,9 +5,6 @@
 
 [node name="Node2D" type="Node2D"]
 script = ExtResource("1_pq8q7")
-_width = 300.0
-_padding = 6.0
-fenetre_jeu = Vector2(400, 400)
 
 [node name="Canvas" type="ColorRect" parent="."]
 unique_name_in_owner = true
