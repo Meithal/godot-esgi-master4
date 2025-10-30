@@ -1,6 +1,11 @@
 using System;
 using System.Numerics;
 
+
+/**
+* Nouveau coeur ou on fait bouger les obstacles
+ et ou le flappy reste immobile en X
+*/
 namespace FlappyCore
 {
     internal class FlyingBird2
@@ -120,7 +125,7 @@ namespace FlappyCore
                 //_obstacles[i] = obs;
             }
 
-            if(CheckCollision())
+            if (CheckCollision())
             {
                 IsGameOver = true;
             }

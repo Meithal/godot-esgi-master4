@@ -1,6 +1,10 @@
 using System;
 using System.Numerics;
 
+
+/**
+  Interface entre le coeur et les implementations.
+*/
 namespace FlappyCore
 {
     public struct InputData
@@ -117,7 +121,7 @@ namespace FlappyCore
                         game.GenerateObstaclesValues(10);
             */
         }
-        
+
         public int GetObstaclesPasses()
         {
             return game.ObstaclesPasses;

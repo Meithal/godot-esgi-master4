@@ -2,6 +2,9 @@ using Godot;
 using System;
 using FlappyCore;
 
+/**
+  script godot du nouveau flappy qui utilise le nouveau core (Flappy2)
+*/
 public partial class Root : Node2D
 {
 	[Export] private float _num_obstacles = 10;
@@ -174,9 +177,9 @@ public partial class Root : Node2D
 		// 	_score_label.Visible = false;
 		// else
 		// 	_score_label.Visible = true;
-		
+
 		_score_label.Text = "Score : " + _core.GetObstaclesPasses();
-    }
+	}
 
 	public override void _Draw()
 	{
@@ -188,23 +191,23 @@ public partial class Root : Node2D
 			DrawRect(_obstaclesBottom[i], Colors.Green);
 			DrawRect(_obstaclesTop[i], Colors.Green);
 		}
-		
+
 		//float borderHeight = 0f; // hauteur des rects de délimitation
 
-   		 // Rect en bas du monde
-   	
+		// Rect en bas du monde
+
 		float borderHeight = 500f; // par exemple, étendue verticale
 
 		//float borderHeight = 20f; // hauteur des bords en unités de jeu (ou pixels si tu veux fixe)
 
-	// Rect en bas du monde (s'étend vers le haut)
+		// Rect en bas du monde (s'étend vers le haut)
 		float bottomY = MapY(0); // position verticale du bas du monde
 		Rect2 bottomBorder = new Rect2(-1000, bottomY, _screenWidth * 2, borderHeight);
 		DrawRect(bottomBorder, Colors.Green);
-		
+
 		// Rect en haut du monde (s'étend vers le bas)
 		float topY = _max_y; // position verticale du haut du monde
-		Rect2 topBorder = new Rect2(-1000, -topY - borderHeight, _screenWidth *2, borderHeight);
+		Rect2 topBorder = new Rect2(-1000, -topY - borderHeight, _screenWidth * 2, borderHeight);
 		DrawRect(topBorder, Colors.Green);
 
 		DrawScore();

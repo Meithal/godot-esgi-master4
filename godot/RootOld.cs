@@ -1,8 +1,11 @@
 using Godot;
 using System;
 using FlappyCore;
-using System.Reflection.Metadata;
 
+/**
+  Script de l'ancien flappy qui dialoguait directement avec le core Flappy.cs
+  Lancer la scene root_old.tscn pour le tester
+*/
 public partial class RootOld : Node2D
 {
 	public const int PIXELS_PER_M = 100; // Godot par defaut considere que 1m = 100 pixels
@@ -74,7 +77,8 @@ public partial class RootOld : Node2D
 		// notre moteur fonctionne en secondes
 		_core_flappy.Tick((float)delta);
 
-		if (_core_flappy.HasObstacleBeenPassed()) {
+		if (_core_flappy.HasObstacleBeenPassed())
+		{
 			_dealWithObstaclePassed();
 		}
 	}
@@ -120,7 +124,7 @@ public partial class RootOld : Node2D
 				if (c is ColorRect)
 					c.Free();
 			}
-			
+
 			for (int i = 0; i < _num_obsacles; i++)
 			{
 				var bar = new ColorRect();
@@ -137,11 +141,11 @@ public partial class RootOld : Node2D
 			}
 		}
 	}
-	
+
 	private void _onDeath()
-    {
+	{
 		GD.Print("RIP");
 		_obstacles_passes = 0;
 		_drawObstacles(0, _canvas);
-    }
+	}
 }

@@ -2,7 +2,10 @@
 
 namespace FlappyCore;
 
-
+/**
+ * Ancienne version du coeur ou le flappy bougeait 
+ * et les obstacles restaient immobiles
+*/
 internal class FlyingBird
 {
 
