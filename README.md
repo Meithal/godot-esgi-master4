@@ -2,6 +2,9 @@
 
 ## Présentation
 
+![flappy godot](flappy_godot.gif)
+![flappy unity](flappy_unity.gif)
+
 Ce projet implémente une **simulation du jeu Flappy Bird** à l’aide d’un **moteur de logique central en C# (.NET)** intégré à deux moteurs de jeu distincts :
 
 - **Unity** pour une visualisation en 3D.  
