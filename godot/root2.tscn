@@ -1,0 +1,31 @@
+[gd_scene load_steps=3 format=3 uid="uid://bhq36d616gab1"]
+
+[ext_resource type="Script" uid="uid://bg6epysioprve" path="res://Root.cs" id="1_35evl"]
+[ext_resource type="SpriteFrames" uid="uid://1720pq077f7k" path="res://animated_sprites/flying_bird.tres" id="2_d4hu2"]
+
+[node name="Node2D" type="Node2D"]
+script = ExtResource("1_35evl")
+_width = 300.0
+_padding = 6.0
+fenetre_jeu = Vector2(400, 400)
+
+[node name="Canvas" type="ColorRect" parent="."]
+unique_name_in_owner = true
+color = Color(0.25882354, 1, 0.44705883, 1)
+
+[node name="Bird" type="Node2D" parent="Canvas"]
+unique_name_in_owner = true
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Canvas/Bird"]
+sprite_frames = ExtResource("2_d4hu2")
+autoplay = "default"
+frame_progress = 0.33478266
+
+[node name="Camera2D" type="Camera2D" parent="Canvas/Bird/AnimatedSprite2D"]
+position = Vector2(336, 0)
+
+[node name="ColorRect" type="ColorRect" parent="Canvas/Bird"]
+custom_minimum_size = Vector2(4, 4)
+offset_right = 1.0
+offset_bottom = 1.0
+color = Color(1, 0, 0, 1)

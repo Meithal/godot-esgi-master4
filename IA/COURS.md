@@ -52,7 +52,6 @@ que le nombre d'inputs.
 
 https://colab.research.google.com/drive/1c3gi0d1NA2TBaqOpEQ-LzGqfJGvwMUuE?usp=sharing
 
-
 Normalisation standardisation
 ---
 
@@ -61,3 +60,14 @@ On adapte nots entrees a la fonction d'activation.
 Normalisation : (X - xmin) / (xmax - xmin) -> pour un pixel de 0 a 255 on fait valeur pixel / 255
 
 Standardisation : on soustrait la moyenne et on divise par l'ecart type
+
+Dans quel cas un perceptron multi couche fonctionne mal ?
+---
+
+Approximer des choses difficilement lineairement separables, des relations
+polynomiales par exemple (x^2, exp(x)), l'ajout de couches cachées ne suit
+pas l'explosion polynomiale a un moment.
+
+Les RBF sont une famille de réseaux de neurones qui projettent
+les données de manière particulière dans l'espace avant un traitement
+linéaire.

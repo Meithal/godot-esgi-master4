@@ -54,6 +54,8 @@ public class Flappy
 
         _rand = new Random(seed);
         _initial_seed = seed;
+
+        GenerateObstaclesValues(_num_obstacles);
     }
 
     private void ResetBird()
@@ -62,6 +64,7 @@ public class Flappy
         _bird.Speed = new Vector2(1.4f, 0);
         _bird.Position = new Vector2(Math.Min(_width, 0.1f), _height / 2);
         _obstacle_cursor = 0;
+        GenerateObstaclesValues(_num_obstacles);
         OnDeath?.Invoke();
     }
 
@@ -99,7 +102,7 @@ public class Flappy
         _obstacle_cursor %= _num_obstacles;
     }
 
-    public float GetObstacle(int which)
+    public float GetObstacleHeight(int which)
     {
         return _obstacles[(which + _obstacle_cursor) % _num_obstacles];
     }
@@ -133,7 +136,7 @@ public class Flappy
 
         if (
             has_obstacle_been_passed
-            && posApres.Y < _obstacles[(nextObstacle + _obstacle_cursor) % _num_obstacles] * _height
+            && posApres.Y < _obstacles[nextObstacle % _num_obstacles] * _height
         )
         {
             //_obstacle_cursor++;

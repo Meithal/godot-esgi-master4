@@ -38,7 +38,7 @@ public partial class Root : Node2D
 
 		_core_flappy = Flappy.CreateWithDimension(_width, _height, _num_obsacles, _ecart_obstacles, _padding, new Random().Next());
 
-		_core_flappy.GenerateObstaclesValues(10);
+		//_core_flappy.GenerateObstaclesValues(10);
 
 		_canvas = GetNode<ColorRect>("%Canvas");
 		_canvas.GrowVertical = Control.GrowDirection.Begin;
@@ -64,7 +64,6 @@ public partial class Root : Node2D
 		_godot_bird.Position = new Godot.Vector2(
 			pos.X * PIXELS_PER_M, (_height - pos.Y) * PIXELS_PER_M
 		);
-
 	}
 
 	// le delta est en secondes
@@ -121,10 +120,11 @@ public partial class Root : Node2D
 				if (c is ColorRect)
 					c.Free();
 			}
+			
 			for (int i = 0; i < _num_obsacles; i++)
 			{
 				var bar = new ColorRect();
-				float value = _core_flappy.GetObstacle(i);
+				float value = _core_flappy.GetObstacleHeight(i);
 				bar.Color = Colors.Red;
 
 				var h = _height * PIXELS_PER_M * value;

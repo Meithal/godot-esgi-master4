@@ -52,7 +52,7 @@ class TestPittsMacCulloch(unittest.TestCase):
 
     def test_pitts_matrix_or(self) -> None:
         inputs = [[0.,0.], [0.,1.], [1.,0.], [1.,1.]]
-        outputs = [0, 1, 1, 1]
+        outputs = [0., 1., 1., 1.]
 
         res = neurones.mcculloch_pitts_neuron(entries=2, seuil=1)
 
