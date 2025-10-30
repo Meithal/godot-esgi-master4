@@ -103,4 +103,4 @@ L’intégration Godot repose sur :
 - **Timothée M’Bassije**  
 
 Projet réalisé dans le cadre du module  
-**Simulation et Intégration Moteur — 2025**  
+**Biomimétisme/ moteur Godot ESGI— 2025**  
