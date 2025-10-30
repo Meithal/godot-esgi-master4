@@ -1,147 +1,211 @@
 using Godot;
 using System;
 using FlappyCore;
-using System.Reflection.Metadata;
 
 public partial class Root : Node2D
 {
-	public const int PIXELS_PER_M = 100; // Godot par defaut considere que 1m = 100 pixels
+	[Export] private float _num_obstacles = 10;
+	[Export] private float _gap = 30f;
+	[Export] private float _obstacle_width = 10f;
+	[Export] private float _max_y = 100f;
+	[Export] private float _pipeExcess = 100f; // Dépassement des obstacles
 
-	[Export] private float _speed = 1f;
-	[Export] private float _width = 1000;
-	[Export] private float _height = 10.8f; // en mn 
-	[Export] private int _num_obsacles = 6;
-	[Export] private float _ecart_obstacles = 1.2f;
-	[Export] private float _padding = 2;
-	private float time = 1f;
+	private FlappyEntry _core;
+	private OutputData _output;
 
-	[Export] private Vector2 fenetre_jeu = new Vector2(400, 200);
+	private Node2D _bird;
+	private Rect2[] _obstaclesBottom;
+	private Rect2[] _obstaclesTop;
 
-	private Flappy _core_flappy;
+	private float _screenWidth;
+	private float _screenHeight;
 
-	private Node2D _godot_bird;
+	private float birdOffsetX = 0f;
+	private float unitsPerPixel = 0;
 
-	private bool _has_obstacle_been_passed = false;
+	// === UI ===
+	private Control _menuPanel;
+	private Control _gameOverPanel;
 
-	private int _obstacles_passes = 0;
-
-	private ColorRect _canvas;
+	private bool _isPlaying = false;
 
 	public override void _Ready()
 	{
 		base._Ready();
 
+		_menuPanel = GetNode<Control>("CanvasLayer/MainMenu");
+		_gameOverPanel = GetNode<Control>("CanvasLayer/Gameover");
 
-		GD.Print("Mon comp ready");
-		GD.Print("Mon comp ready2");
-		//GD.Print(Flappy.Toto());
+		_menuPanel.Visible = true;
+		_gameOverPanel.Visible = false;
 
-		_core_flappy = Flappy.CreateWithDimension(_width, _height, _num_obsacles, _ecart_obstacles, _padding, new Random().Next());
+		_menuPanel.GetNode<Button>("Play").Pressed += OnPlayPressed;
+		_menuPanel.GetNode<Button>("Quit").Pressed += OnQuitPressed;
+		_gameOverPanel.GetNode<Button>("replay").Pressed += OnReplayPressed;
+		_gameOverPanel.GetNode<Button>("Mainmenu").Pressed += OnMainMenuPressed;
 
-		//_core_flappy.GenerateObstaclesValues(10);
+		GD.Print("[Root] En attente de lancement...");
+	}
 
-		_canvas = GetNode<ColorRect>("%Canvas");
-		_canvas.GrowVertical = Control.GrowDirection.Begin;
+	// ================= GAMEPLAY =================
+	private void StartFlappy()
+	{
+		GD.Print("[Root] Initialisation FlappyEntry...");
+		_core = new FlappyEntry();
+		_output = _core.Init(
+			numObstacles: (int)_num_obstacles,
+			gravity: 100f,
+			obstacleSpeed: 40f,
+			birdRadius: 1f,
+			seed: 42
+		);
 
-		_canvas.Size = new Vector2(_width * PIXELS_PER_M, _height * PIXELS_PER_M);
+		_bird = GetNode<Node2D>("%Bird");
+		var sprite = _bird.GetNode<AnimatedSprite2D>("AnimatedSprite2D");
+		sprite.Scale = new Vector2(2f, 2f);
+		sprite.Centered = true;
+		sprite.Position = Vector2.Zero;
 
-		_godot_bird = GetNode<Node2D>("%Bird");
+		_screenWidth = GetViewport().GetVisibleRect().Size.X;
+		_screenHeight = GetViewport().GetVisibleRect().Size.Y;
+		unitsPerPixel = _screenWidth / _max_y;
 
-		_drawObstacles(_obstacles_passes, _canvas);
+		_obstaclesBottom = new Rect2[_output.Obstacles.Length];
+		_obstaclesTop = new Rect2[_output.Obstacles.Length];
 
-		_core_flappy.OnDeath += _onDeath;
+		_isPlaying = true;
+		_menuPanel.Visible = false;
+		_gameOverPanel.Visible = false;
+
+		GD.Print("[Root] Jeu démarré !");
+	}
+
+	private void ResetFlappy()
+	{
+		GD.Print("[Root] Réinitialisation du jeu...");
+		_core.Reset();
+		_isPlaying = true;
+		_menuPanel.Visible = false;
+		_gameOverPanel.Visible = false;
 	}
 
 	public override void _Process(double delta)
 	{
-
 		base._Process(delta);
+		if (!_isPlaying || _core == null) return;
 
-		// convertir le Vector2 de Csharp vers celui de Godot
-		// dans notre moteur le Y croit vers le haut
-		// l'unite de godot par defaut est de 100 pixels par metre
-		var pos = _core_flappy.GetBirdPosition();
-		_godot_bird.Position = new Godot.Vector2(
-			pos.X * PIXELS_PER_M, (_height - pos.Y) * PIXELS_PER_M
-		);
-	}
-
-	// le delta est en secondes
-	public override void _PhysicsProcess(double delta)
-	{
-		base._PhysicsProcess(delta);
-
-		// notre moteur fonctionne en secondes
-		_core_flappy.Tick((float)delta);
-
-		if (_core_flappy.HasObstacleBeenPassed()) {
-			_dealWithObstaclePassed();
-		}
-	}
-
-	public override void _Input(InputEvent @event)
-	{
-		base._Input(@event);
-
-		if (Input.IsActionJustPressed("Flap"))
+		var input = new InputData
 		{
-			_core_flappy.Flap();
-		}
+			JumpPressed = Input.IsActionJustPressed("Flap"),
+			DeltaTime = (float)delta
+		};
 
-		if (Input.IsActionJustPressed("Leave Game"))
+		try
 		{
-			GD.Print("leave");
-			GetTree().Root.PropagateNotification((int)NotificationWMCloseRequest);
+			_core.Update(in input, ref _output);
 		}
-	}
-
-	public override void _Notification(int what)
-	{
-		if (what == NotificationWMCloseRequest)
+		catch (Exception ex)
 		{
-			GetTree().Quit(); // default behavior
+			GD.PrintErr("[Root] FlappyEntry.Update failed: " + ex.Message);
+			return;
 		}
-	}
 
-	private void _dealWithObstaclePassed()
-	{
-		GD.Print("pass");
-		_obstacles_passes++;
-		_core_flappy.GenerateObstaclesValues(1);
-		_drawObstacles(_obstacles_passes, _canvas);
-	}
-
-	private void _drawObstacles(int start, ColorRect canvas)
-	{
+		if (_output.GameOver)
 		{
-			var children = canvas.GetChildren();
-			foreach (var c in children)
-			{
-				if (c is ColorRect)
-					c.Free();
-			}
-			
-			for (int i = 0; i < _num_obsacles; i++)
-			{
-				var bar = new ColorRect();
-				float value = _core_flappy.GetObstacleHeight(i);
-				bar.Color = Colors.Red;
-
-				var h = _height * PIXELS_PER_M * value;
-				bar.Size = new Vector2(8, h);
-				bar.Position = new Vector2(
-					_padding * PIXELS_PER_M
-						+ (i + start) * _ecart_obstacles * PIXELS_PER_M,
-					_height * PIXELS_PER_M - h);
-				canvas.AddChild(bar);
-			}
+			GD.Print("[Root] Game Over détecté !");
+			_isPlaying = false;
+			_gameOverPanel.Visible = true;
+			return;
 		}
+
+		_bird.Position = new Vector2(100, MapY(_output.FlappyHeight));
+
+		UpdateObstacles();
 	}
+
+	private void UpdateObstacles()
+	{
+		float obstacleWidthPixels = _obstacle_width / _max_y * _screenWidth;
+
+		for (int i = 0; i < _output.Obstacles.Length; i++)
+		{
+			var o = _output.Obstacles[i];
+			float xPos = birdOffsetX + (o.X - _output.FlappyX) * unitsPerPixel;
+
+			// --- OBSTACLE BAS ---
+			float bottomHeight = o.Y;
+			float bottomHeightPixels = bottomHeight / _max_y * _screenHeight;
+			float rectHeightBottom = bottomHeightPixels + _pipeExcess;
+			float bottomTopY = _screenHeight - bottomHeightPixels - (_pipeExcess / 2f); // centrer l'excess
+			_obstaclesBottom[i] = new Rect2(
+				xPos,
+				bottomTopY,
+				obstacleWidthPixels,
+				rectHeightBottom
+			);
+
+			// --- OBSTACLE HAUT ---
+			float gap = _gap;
+			float topHeight = _max_y - bottomHeight - gap;
+			float topHeightPixels = topHeight / _max_y * _screenHeight;
+			float rectHeightTop = topHeightPixels + _pipeExcess;
+			float topBottomY = bottomTopY - (gap / _max_y * _screenHeight) - topHeightPixels - (_pipeExcess / 2f); // centrer l'excess
+			_obstaclesTop[i] = new Rect2(
+				xPos,
+				topBottomY,
+				obstacleWidthPixels,
+				rectHeightTop
+			);
+		}
+
+		QueueRedraw();
+	}
+
+	public override void _Draw()
+	{
+		base._Draw();
+		if (!_isPlaying) return;
+
+		for (int i = 0; i < _obstaclesBottom.Length; i++)
+		{
+			DrawRect(_obstaclesBottom[i], Colors.Green);
+			DrawRect(_obstaclesTop[i], Colors.Green);
+		}
+		
+		//float borderHeight = 0f; // hauteur des rects de délimitation
+
+   		 // Rect en bas du monde
+   	
+		float borderHeight = 500f; // par exemple, étendue verticale
+
+		//float borderHeight = 20f; // hauteur des bords en unités de jeu (ou pixels si tu veux fixe)
+
+// Rect en bas du monde (s'étend vers le haut)
+	float bottomY = MapY(0); // position verticale du bas du monde
+	Rect2 bottomBorder = new Rect2(-1000, bottomY, _screenWidth * 2, borderHeight);
+	DrawRect(bottomBorder, Colors.Green);
 	
-	private void _onDeath()
-    {
-		GD.Print("RIP");
-		_obstacles_passes = 0;
-		_drawObstacles(0, _canvas);
-    }
+	// Rect en haut du monde (s'étend vers le bas)
+	float topY = _max_y; // position verticale du haut du monde
+	Rect2 topBorder = new Rect2(-1000, -topY - borderHeight, _screenWidth *2, borderHeight);
+	DrawRect(topBorder, Colors.Green); 
+
+		
+	}
+
+	private float MapY(float worldY)
+	{
+		return (_max_y - worldY) / _max_y * _screenHeight;
+	}
+
+	// ================= UI CALLBACKS =================
+	private void OnPlayPressed() => StartFlappy();
+	private void OnQuitPressed() => GetTree().Quit();
+	private void OnReplayPressed() => ResetFlappy();
+	private void OnMainMenuPressed()
+	{
+		_isPlaying = false;
+		_menuPanel.Visible = true;
+		_gameOverPanel.Visible = false;
+	}
 }

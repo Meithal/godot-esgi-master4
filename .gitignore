@@ -43,3 +43,13 @@ __pycache__
 *.exe
 *.dll
 *.suo
+
+
+# Visual Studio
+.vs/
+*.vsix
+*.user
+*.suo
+*.vssscc
+*.vsidx
+

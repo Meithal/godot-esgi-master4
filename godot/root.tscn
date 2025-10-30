@@ -1,13 +1,22 @@
-[gd_scene load_steps=3 format=3 uid="uid://cfw483fw0w7t6"]
+[gd_scene load_steps=4 format=3 uid="uid://cfw483fw0w7t6"]
 
 [ext_resource type="Script" uid="uid://bg6epysioprve" path="res://Root.cs" id="1_pq8q7"]
 [ext_resource type="SpriteFrames" uid="uid://1720pq077f7k" path="res://animated_sprites/flying_bird.tres" id="2_pyidc"]
+[ext_resource type="Texture2D" uid="uid://bc7mqj44l2tu3" path="res://Sprite2D/46888871-624a3900-ce7f-11e8-808e-99fd90c8a3f4.png" id="3_vvh5c"]
 
 [node name="Node2D" type="Node2D"]
 script = ExtResource("1_pq8q7")
-_width = 300.0
-_padding = 6.0
-fenetre_jeu = Vector2(400, 400)
+
+[node name="Parallax2D" type="Parallax2D" parent="."]
+autoscroll = Vector2(-100, 0)
+limit_begin = Vector2(-100000000, -10000000)
+limit_end = Vector2(100000000, 10000000)
+
+[node name="Sprite2D" type="Sprite2D" parent="Parallax2D"]
+z_index = -9
+position = Vector2(1064, 233)
+scale = Vector2(3.7672222, 3.8462298)
+texture = ExtResource("3_vvh5c")
 
 [node name="Canvas" type="ColorRect" parent="."]
 unique_name_in_owner = true
@@ -29,3 +38,77 @@ custom_minimum_size = Vector2(4, 4)
 offset_right = 1.0
 offset_bottom = 1.0
 color = Color(1, 0, 0, 1)
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="MainMenu" type="Control" parent="CanvasLayer"]
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -973.0
+offset_top = -550.0
+offset_right = 951.0
+offset_bottom = 505.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Play" type="Button" parent="CanvasLayer/MainMenu"]
+layout_mode = 0
+offset_left = 748.0
+offset_top = 315.0
+offset_right = 1142.0
+offset_bottom = 502.0
+text = "Play
+"
+
+[node name="Quit" type="Button" parent="CanvasLayer/MainMenu"]
+layout_mode = 0
+offset_left = 752.0
+offset_top = 638.0
+offset_right = 1145.0
+offset_bottom = 836.0
+text = "QUIT
+"
+
+[node name="TextEdit" type="TextEdit" parent="CanvasLayer/MainMenu"]
+layout_mode = 0
+offset_left = 879.0
+offset_top = 49.0
+offset_right = 1006.0
+offset_bottom = 118.0
+text = "FLAPPY BIRD
+"
+
+[node name="Gameover" type="Control" parent="CanvasLayer"]
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="replay" type="Button" parent="CanvasLayer/Gameover"]
+layout_mode = 0
+offset_left = -39.0
+offset_top = -13.0
+offset_right = 694.0
+offset_bottom = 175.0
+text = "REPLAY"
+
+[node name="Mainmenu" type="Button" parent="CanvasLayer/Gameover"]
+layout_mode = 0
+offset_left = -9.0
+offset_top = 307.0
+offset_right = 676.0
+offset_bottom = 495.0
+text = "MAIN MENU
+"

@@ -41,6 +41,8 @@ namespace FlappyCore
         public Vector2 BirdPosition => _bird.Position;
         public float BirdRadius => _bird.Radius;
 
+        public bool IsGameOver { get; private set; } = false;
+
         // --- Constructeur ---
         public Flappy2(
             int numObstacles,
@@ -117,7 +119,7 @@ namespace FlappyCore
 
             if(CheckCollision())
             {
-                Reset();
+                IsGameOver = true;
             }
         }
 
@@ -141,6 +143,7 @@ namespace FlappyCore
             _bird.Position = new Vector2(20f, WORLD_HEIGHT / 2f);
             _bird.Speed = Vector2.Zero;
             InitializeObstacles();
+            IsGameOver = false;
         }
 
         // --- Collision ---

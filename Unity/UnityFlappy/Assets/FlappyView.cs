@@ -10,6 +10,7 @@ public class FlappyView : MonoBehaviour
     [Header("Prefabs")]
     public GameObject BirdPrefab;
     public GameObject ObstaclePrefab;
+    public GameObject GroundPrefab;
 
     [Header("View Parameters")]
     public float BirdOffsetX = 0f;
@@ -23,8 +24,17 @@ public class FlappyView : MonoBehaviour
     private GameObject[] obstaclesBottom;
     private GameObject[] obstaclesTop;
     private float worldScrollX = 0f;
+    private float pipeExcess = 30f;
 
-    void Start()
+    private float _prevFlappyHeight;
+    private float _birdAngleSmoothed = 0f;
+    [Tooltip("Facteur appliqué à la vitesse verticale pour obtenir l'angle")]
+    public float RotationFactor = 0.5f;
+    [Tooltip("Vitesse de lissage de la rotation (plus grand = moins de jitter)")]
+    public float RotationSmooth = 8f;
+
+
+    public void StartFlappy()
     {
         if (Origin == null) Origin = transform;
 
@@ -42,6 +52,9 @@ public class FlappyView : MonoBehaviour
         bird = Instantiate(BirdPrefab, Origin);
         bird.transform.localPosition = new Vector3(BirdOffsetX, MapY(output.FlappyHeight), 0f);
 
+        var g = Instantiate(GroundPrefab, Origin);
+        g.transform.localPosition = new Vector3(75f, MapY(0), 20f);
+
         // Crée un GameObject pour chaque obstacle bas
         obstaclesBottom = new GameObject[output.Obstacles.Length];
         obstaclesTop = new GameObject[output.Obstacles.Length];
@@ -50,9 +63,11 @@ public class FlappyView : MonoBehaviour
             obstaclesBottom[i] = Instantiate(ObstaclePrefab, Origin);
             obstaclesTop[i] = Instantiate(ObstaclePrefab, Origin);
         }
+
+        _prevFlappyHeight = output.FlappyHeight;
     }
 
-    void Update()
+    public void UpdateFlappy()
     {
         var input = new InputData
         {
@@ -76,6 +91,8 @@ public class FlappyView : MonoBehaviour
         // Bird reste fixe à l’écran
         if (bird != null)
             bird.transform.localPosition = new Vector3(BirdOffsetX, MapY(output.FlappyHeight), 0f);
+        //float angle = Mathf.Clamp(output.FlappyVerticalSpeed * 0.5f, -45f, 45f);
+        //bird.transform.localRotation = Quaternion.Euler(0f, 0f, angle);
 
         float obstacleWidth = 10f;
         float gap = 30f; // espace entre le bas et le haut
@@ -88,21 +105,38 @@ public class FlappyView : MonoBehaviour
             // --- TUBE BAS ---
             float bottomHeight = o.Y;
             float bottomCenterY = bottomHeight / 2f;
-            obstaclesBottom[i].transform.localScale = new Vector3(obstacleWidth, MapY(bottomHeight) / 2f, obstacleWidth);
-            obstaclesBottom[i].transform.localPosition = new Vector3(xPos, MapY(bottomCenterY), 0f);
+            obstaclesBottom[i].transform.localScale = new Vector3(obstacleWidth, MapY(bottomHeight) / 2f + pipeExcess, obstacleWidth);
+            obstaclesBottom[i].transform.localPosition = new Vector3(xPos, MapY(bottomCenterY) - pipeExcess, 0f);
 
             // --- TUBE HAUT ---
             float topHeight = bottomHeight + gap;              // Hauteur du tube haut
             float topCenterY = bottomHeight + bottomCenterY + gap;    // Centre du cylindre
 
-            obstaclesTop[i].transform.localScale = new Vector3(obstacleWidth, MapY(bottomHeight) / 2f, obstacleWidth);
+            obstaclesTop[i].transform.localScale = new Vector3(obstacleWidth, MapY(bottomHeight) / 2f + pipeExcess, obstacleWidth);
             obstaclesTop[i].transform.localPosition = new Vector3(
                 xPos,
-                MapY(topCenterY),
+                MapY(topCenterY) + pipeExcess,
                 0f
             );
 
         }
+
+        // calculer la vitesse verticale en unités monde / seconde
+        float verticalSpeed = 0f;
+        if (Time.deltaTime > 0f)
+            verticalSpeed = (output.FlappyHeight - _prevFlappyHeight) / Time.deltaTime;
+
+        // stocker pour la frame suivante
+        _prevFlappyHeight = output.FlappyHeight;
+
+        // convertir en angle, contraindre et lisser
+        float targetAngle = Mathf.Clamp(verticalSpeed * RotationFactor, -45f, 45f);
+        _birdAngleSmoothed = Mathf.Lerp(_birdAngleSmoothed, targetAngle, RotationSmooth * Time.deltaTime);
+
+        // appliquer la rotation (Z en degrés)
+        if (bird != null)
+            bird.transform.localRotation = Quaternion.Euler(-_birdAngleSmoothed - 20, 90f, 0);
+
     }
 
     private float MapY(float worldY)
@@ -117,4 +151,8 @@ public class FlappyView : MonoBehaviour
             if (t.phase == TouchPhase.Began) return true;
         return false;
     }
+
+    public void Reset() { flappy.Reset(); }
+
+    public bool GameOver() { return output.GameOver; }
 }
