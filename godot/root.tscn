@@ -1,10 +1,15 @@
-[gd_scene load_steps=4 format=3 uid="uid://cfw483fw0w7t6"]
+[gd_scene load_steps=5 format=3 uid="uid://cfw483fw0w7t6"]
 
 [ext_resource type="Script" uid="uid://bg6epysioprve" path="res://Root.cs" id="1_pq8q7"]
 [ext_resource type="SpriteFrames" uid="uid://1720pq077f7k" path="res://animated_sprites/flying_bird.tres" id="2_pyidc"]
 [ext_resource type="Texture2D" uid="uid://bc7mqj44l2tu3" path="res://Sprite2D/46888871-624a3900-ce7f-11e8-808e-99fd90c8a3f4.png" id="3_vvh5c"]
 
-[node name="Node2D" type="Node2D"]
+[sub_resource type="LabelSettings" id="LabelSettings_vvh5c"]
+font_size = 60
+outline_size = 1
+outline_color = Color(0.837661, 0.051588483, 0.38820797, 1)
+
+[node name="Node2D2" type="Node2D"]
 script = ExtResource("1_pq8q7")
 
 [node name="Parallax2D" type="Parallax2D" parent="."]
@@ -32,6 +37,20 @@ frame_progress = 0.33478266
 
 [node name="Camera2D" type="Camera2D" parent="Canvas/Bird/AnimatedSprite2D"]
 position = Vector2(336, 0)
+
+[node name="LabelScore" type="Label" parent="Canvas/Bird/AnimatedSprite2D"]
+unique_name_in_owner = true
+visible = false
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = 255.0
+offset_top = -186.0
+offset_right = 598.0
+offset_bottom = -84.0
+grow_horizontal = 0
+text = "Score : "
+label_settings = SubResource("LabelSettings_vvh5c")
 
 [node name="ColorRect" type="ColorRect" parent="Canvas/Bird"]
 custom_minimum_size = Vector2(4, 4)

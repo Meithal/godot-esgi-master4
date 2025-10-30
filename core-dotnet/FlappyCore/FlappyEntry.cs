@@ -112,10 +112,15 @@ namespace FlappyCore
         {
             game?.Reset();
             GameTime = 0f;
-/*
-            game = Flappy.CreateWithDimension(_width, _height, _worldObstacleCount, 1.2f, _padding, 42);
-            game.GenerateObstaclesValues(10);
-*/
+            /*
+                        game = Flappy.CreateWithDimension(_width, _height, _worldObstacleCount, 1.2f, _padding, 42);
+                        game.GenerateObstaclesValues(10);
+            */
+        }
+        
+        public int GetObstaclesPasses()
+        {
+            return game.ObstaclesPasses;
         }
     }
 }

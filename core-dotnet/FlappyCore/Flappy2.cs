@@ -41,6 +41,9 @@ namespace FlappyCore
         public Vector2 BirdPosition => _bird.Position;
         public float BirdRadius => _bird.Radius;
 
+        public int ObstaclesPasses = 0;
+        private readonly HashSet<Vector2> obstacles_seen = new();
+
         public bool IsGameOver { get; private set; } = false;
 
         // --- Constructeur ---
@@ -104,7 +107,7 @@ namespace FlappyCore
             // --- Déplacement des obstacles ---
             for (int i = 0; i < _numObstacles; i++)
             {
-                Vector2 obs = _obstacles[i];
+                ref Vector2 obs = ref _obstacles[i];
                 obs.X -= _obstacleSpeed * deltaTime;
 
                 if (obs.X + _obstacleSize < 0f)
@@ -114,7 +117,7 @@ namespace FlappyCore
                     obs.Y = GenerateNextObstacleY();
                 }
 
-                _obstacles[i] = obs;
+                //_obstacles[i] = obs;
             }
 
             if(CheckCollision())
@@ -144,6 +147,8 @@ namespace FlappyCore
             _bird.Speed = Vector2.Zero;
             InitializeObstacles();
             IsGameOver = false;
+            ObstaclesPasses = 0;
+            obstacles_seen.Clear();
         }
 
         // --- Collision ---
@@ -151,6 +156,7 @@ namespace FlappyCore
         {
             const float GAP_SIZE = 30f; // Espace libre entre le haut et le bas
             const float WORLD_HEIGHT = 100f; // Hauteur totale de la zone de jeu
+
 
             foreach (var obs in _obstacles)
             {
@@ -160,6 +166,13 @@ namespace FlappyCore
                 // Si trop loin, on ignore
                 if (Math.Abs(dx) > _obstacleSize + _bird.Radius)
                     continue;
+
+                if (obs.X < _bird.Position.X && !obstacles_seen.Contains(obs))
+                {
+                    Console.WriteLine(obs.GetHashCode());
+                    obstacles_seen.Add(obs);
+                    ObstaclesPasses++;
+                }
 
                 // Calcul des limites du trou
                 float gapBottom = obs.Y;

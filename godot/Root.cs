@@ -29,6 +29,8 @@ public partial class Root : Node2D
 
 	private bool _isPlaying = false;
 
+	private Label _score_label;
+
 	public override void _Ready()
 	{
 		base._Ready();
@@ -43,6 +45,8 @@ public partial class Root : Node2D
 		_menuPanel.GetNode<Button>("Quit").Pressed += OnQuitPressed;
 		_gameOverPanel.GetNode<Button>("replay").Pressed += OnReplayPressed;
 		_gameOverPanel.GetNode<Button>("Mainmenu").Pressed += OnMainMenuPressed;
+
+
 
 		GD.Print("[Root] En attente de lancement...");
 	}
@@ -76,6 +80,8 @@ public partial class Root : Node2D
 		_isPlaying = true;
 		_menuPanel.Visible = false;
 		_gameOverPanel.Visible = false;
+
+		_score_label = GetNode<Label>("%LabelScore");
 
 		GD.Print("[Root] Jeu démarré !");
 	}
@@ -121,6 +127,7 @@ public partial class Root : Node2D
 		_bird.Position = new Vector2(100, MapY(_output.FlappyHeight));
 
 		UpdateObstacles();
+		DrawScore();
 	}
 
 	private void UpdateObstacles()
@@ -161,6 +168,16 @@ public partial class Root : Node2D
 		QueueRedraw();
 	}
 
+	private void DrawScore()
+	{
+		// if (_isPlaying)
+		// 	_score_label.Visible = false;
+		// else
+		// 	_score_label.Visible = true;
+		
+		_score_label.Text = "Score : " + _core.GetObstaclesPasses();
+    }
+
 	public override void _Draw()
 	{
 		base._Draw();
@@ -180,17 +197,17 @@ public partial class Root : Node2D
 
 		//float borderHeight = 20f; // hauteur des bords en unités de jeu (ou pixels si tu veux fixe)
 
-// Rect en bas du monde (s'étend vers le haut)
-	float bottomY = MapY(0); // position verticale du bas du monde
-	Rect2 bottomBorder = new Rect2(-1000, bottomY, _screenWidth * 2, borderHeight);
-	DrawRect(bottomBorder, Colors.Green);
-	
-	// Rect en haut du monde (s'étend vers le bas)
-	float topY = _max_y; // position verticale du haut du monde
-	Rect2 topBorder = new Rect2(-1000, -topY - borderHeight, _screenWidth *2, borderHeight);
-	DrawRect(topBorder, Colors.Green); 
-
+	// Rect en bas du monde (s'étend vers le haut)
+		float bottomY = MapY(0); // position verticale du bas du monde
+		Rect2 bottomBorder = new Rect2(-1000, bottomY, _screenWidth * 2, borderHeight);
+		DrawRect(bottomBorder, Colors.Green);
 		
+		// Rect en haut du monde (s'étend vers le bas)
+		float topY = _max_y; // position verticale du haut du monde
+		Rect2 topBorder = new Rect2(-1000, -topY - borderHeight, _screenWidth *2, borderHeight);
+		DrawRect(topBorder, Colors.Green);
+
+		DrawScore();
 	}
 
 	private float MapY(float worldY)
