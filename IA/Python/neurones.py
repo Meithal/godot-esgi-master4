@@ -1,5 +1,5 @@
 #from typing import Generator, Iterator, Any, Iterable
-from typing import Generic, TypeVar, Iterator
+from typing import Generic, TypeVar, Iterator, Callable
 from collections import deque
 
 
@@ -34,8 +34,8 @@ class SetDeque(Generic[T]):
 class Neurone:
     name: str
     biais: float = 0.0
-    entrees: list['Connexion']
-    sorties: list['Connexion']
+    entrees: list[Connexion]
+    sorties: list[Connexion]
     value: float = 0.0
 
     def __init__(self, name : str, seuil: float = 0) -> None:
@@ -46,7 +46,7 @@ class Neurone:
         self.value = 0.0            
     
     def __str__(self) -> str:
-        return self.name + ":" + str(self.value)
+        return self.name + ":" + str(self.value) + " s " + str(self.biais)
 
     def is_entry(self) -> bool:
         for e in self.entrees:
@@ -77,7 +77,7 @@ class Connexion:
             self, value: float | None, 
             amont : Neurone | None, 
             aval : Neurone | None, 
-            poids = 1.0):
+            poids: float = 1.0):
         self._value = value
         self.amont = amont
         self.aval = aval
@@ -101,6 +101,13 @@ class Connexion:
         if self.amont:
             return self.amont.value
         return 0
+    
+    def zero(self):
+        self._value = 0
+    
+    def feed(self, value: float) -> None:
+        self._value = value
+
 
 class Reseau:
     """
@@ -109,14 +116,18 @@ class Reseau:
     name: str = "Reseau de neurones"
     neurones : list[Neurone]
     connexions : list[Connexion]
-    entrees : list[Neurone]
+    optiques : list[Neurone]
     sorties : list[Neurone]
 
-    def __init__(self) -> None:
+    value_f : Callable[[float, float], float]
+
+    def __init__(self, value_f : Callable[[float, float], float]) -> None:
         self.neurones = []
-        self.entrees = []
+        self.optiques = []
         self.sorties = []
         self.connexions = []
+
+        self.value_f = value_f
     
     def __str__(self) -> str:
         return "Neurones: " + str(len(self.neurones))+" Sorties: " \
@@ -127,7 +138,7 @@ class Reseau:
         for n in self.neurones:
             if not n.is_entry():  # on suppose qu'on met les entrees d'abord
                 continue
-            self.entrees += [n]
+            self.optiques += [n]
     
     def compute_sorties(self) -> None:
         for n in self.neurones:
@@ -136,13 +147,13 @@ class Reseau:
             self.sorties += [n]
 
     def zero_entries(self) -> None:
-        for n in self.entrees:
+        for n in self.optiques:
             for e in n.entrees:
-                e._value = 0
+                e.zero()
 
     def feed_entries(self, vals: list[float]) -> None:
         for i, v in enumerate(vals):
-            self.entrees[i].entrees[0]._value = v
+            self.optiques[i].entrees[0].feed(v)
 
     def ajout_neurone(self, neurone: Neurone):
         self.neurones += [neurone]
@@ -159,7 +170,7 @@ class Reseau:
         des couches suivante, etc.
         """
         next_neurons = SetDeque[Neurone]()
-        for en in self.entrees:
+        for en in self.optiques:
             next_neurons.append(en)
 
         while next_neurons:
@@ -168,9 +179,8 @@ class Reseau:
 
             for e in n.entrees:
                 t += e.value() * e.poids  # somme toutes les entrees
-            n.value = 0
-            if t >= n.biais:
-                n.value = 1  # met la valeur qu'on vient de calculer sur soi
+            n.value = self.value_f(t, n.biais)
+
             for s in n.sorties:
                 if s.aval is not None:
                     next_neurons.append(s.aval) # on met la couche suivante
@@ -190,8 +200,9 @@ class Reseau:
 
         return True
 
+ 
 
-def mcculloch_pitts_neuron(entries: int, seuil = 0) -> Reseau:
+def mcculloch_pitts_neuron(entries: int, seuil:float = 0) -> Reseau:
     """1943 :
     verifie simplement que la somme des poids est
     superieure a un seuil, le seuil est
@@ -200,7 +211,13 @@ def mcculloch_pitts_neuron(entries: int, seuil = 0) -> Reseau:
     on verifie juste que somme inputs > seuil.
     Il s'agissait d'un montage electronique,
     ou on devait regler le seuil manuellement."""
-    reseau = Reseau()
+    def value_f(value:float, seuil:float) -> float:
+        r = 0
+        if value >= seuil:
+            r = 1
+        return r
+        
+    reseau = Reseau(value_f)
 
     # entrees
     for i in range(entries):
@@ -228,15 +245,30 @@ def rosenblatt_perceptron(entries: int) -> Reseau:
     Chaque dendrite peut avoir un "poids" et les
     entrees sont lineaires plutot que binaires,
     on calcule plutot une probablité qu'une reponse définitive."""
-    reseau = Reseau()
+
+    def value_f(v:float, s:float) -> float:
+        if v >= s:
+            return 1
+        else:
+            return -1
+
+    reseau = Reseau(value_f)
+
+    # entrees
     for i in range(entries):
         neuron = Neurone(str(i+1))
         reseau.ajout_neurone(neuron)
+        reseau.ajout_relation(neurone=neuron, amont=None, value=0)
     
     # neurone de sortie
     sortie = Neurone("OUT")
     reseau.ajout_neurone(sortie)
+    reseau.connexions.append(Connexion(None, amont=sortie, aval=None))
+
     for i in range(entries):
         reseau.ajout_relation(sortie, reseau.get_neuron(i))
+
+    reseau.compute_entries()
+    reseau.compute_sorties()
 
     return reseau

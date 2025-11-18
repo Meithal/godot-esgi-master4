@@ -1,6 +1,6 @@
 import graph
 import neurones
-from graphviz import Source
+#from graphviz import Source
 
 res = neurones.rosenblatt_perceptron(4)
 

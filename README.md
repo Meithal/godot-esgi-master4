@@ -17,24 +17,31 @@ L’objectif principal est de démontrer une **architecture hybride** où la log
 ## Architecture du projet
 
 ### 1. Noyau logique (`FlappyCore.dll`)
+
 La logique du jeu est entièrement implémentée en C# pur et compilée en bibliothèque dynamique (`.dll`).
 
 Principales classes :
+
 - **`Flappy`** : gère la physique du joueur, la gravité, les collisions et les interactions.
 - **`FlappyEntry`** : interface principale du moteur, responsable de l’initialisation, de la mise à jour et de la réinitialisation de la simulation.
 
 Structures de données :
+
 - **`InputData`** : données d’entrée (ex. appui sur le saut, delta time).  
 - **`OutputData`** : données de sortie (positions, obstacles, état du jeu, game over, etc.).
 
 ### 2. Vue Unity
+
 L’intégration Unity repose sur :
+
 - Un **GameManager** contrôlant les états du jeu (menu, partie, game over).
 - Un **FlappyView** mettant à jour la position du joueur et des obstacles à partir des données `OutputData`.
 - Un **système d’entrée** utilisant le Input System pour relayer les commandes au moteur logique.
 
 ### 3. Vue Godot
+
 L’intégration Godot repose sur :
+
 - Un script **`Root.cs`** gérant le cycle du jeu, la communication avec `FlappyEntry`, et le dessin 2D des obstacles.  
 - Des **panneaux UI** (`MainMenu`, `GameOver`) intégrés dans un `CanvasLayer` et contrôlés via des signaux.  
 - Un **système de dessin manuel (`_Draw`)** pour visualiser la simulation.  
@@ -58,12 +65,14 @@ L’intégration Godot repose sur :
 ## Lancer le projet
 
 ### Option 1 — Dans Unity
+
 1. Ouvrir le dossier Unity dans l’éditeur.  
 2. Vérifier que la DLL `FlappyCore.dll` est présente dans `Assets/Plugins/`.  
 3. Lancer la scène principale (`FlappyScene.unity`).  
 4. Appuyer sur **Play** pour tester.  
 
 ### Option 2 — Dans Godot
+
 1. Ouvrir le dossier Godot du projet (`FlappyGodot/`).  
 2. S’assurer que `FlappyCore.dll` est dans le répertoire `godot/bin/` ou accessible depuis `res://`.  
 3. Lancer la scène principale (`root.tscn`).  
