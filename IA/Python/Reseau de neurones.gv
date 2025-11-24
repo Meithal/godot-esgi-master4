@@ -1,5 +1,0 @@
-digraph "Reseau de neurones" {
-	1 [label="1: 0.0 s 1"]
-	OUT [label="OUT: 0.0 s 0"]
-	1 -> OUT [label=0.0]
-}
