@@ -6,6 +6,7 @@ class TestPittsMacCulloch(unittest.TestCase):
     """
     Pitts et Murdoch supportent le OR et le AND
     """
+
     def test_pitts_or(self) -> None:
         """Test un reseau qui simule le or, ici la somme doit juste etre plus grande ou egale que 1."""
 
@@ -28,7 +29,9 @@ class TestPittsMacCulloch(unittest.TestCase):
             self.assertEqual(test_or.sorties[0].value, 1)
 
     def test_pitts_and(self) -> None:
-        """Teste que ce reseau de neurone peut simuler un AND."""
+        """
+        Teste que ce reseau de neurone peut simuler un AND.
+        """
         BATCH = 10
 
         test_and = neurones.mcculloch_pitts_neuron(entries=BATCH, seuil=BATCH)
@@ -85,7 +88,7 @@ class TestRosenblattWeights(unittest.TestCase):
 
         res = neurones.rosenblatt_perceptron(entries=2, sorties=outputs)
         res.name = "Rosen or"
-        res.draw()
+        # res.draw()
         res.train(inputs, outputs)
 
         for (inp, out) in inputs.items():

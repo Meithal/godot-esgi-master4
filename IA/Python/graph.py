@@ -16,16 +16,16 @@ import graphviz
 
 #     gr.render(view=view, format='png')
 
-def dessine(name: str, nodes: list[tuple[str, str]], edges: list[tuple[str, str, str]], do_display : bool = True):
+def dessine(name: str, nodes: list[tuple[str, str, dict[str, str]]], edges: list[tuple[str, str, str]], do_display : bool = True):
     gr = graphviz.Digraph(name)
     for n in nodes:
-        (nname, legend) = n
-        gr.node(nname, label=f"{nname} : {legend}")
+        (nname, legend, extra) = n
+        gr.node(nname, label=f"{nname} : {legend}", **extra)
     for e in edges:
         (amont, aval, legende) = e
         if amont and aval:
             gr.edge(amont, aval, legende)
 
-    print(gr)
+    # print(gr)
 
     gr.render(view=do_display, format='png')
