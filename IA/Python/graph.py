@@ -20,7 +20,7 @@ def dessine(name: str, nodes: list[tuple[str, str, dict[str, str]]], edges: list
     gr = graphviz.Digraph(name)
     for n in nodes:
         (nname, legend, extra) = n
-        gr.node(nname, label=f"{nname} : {legend}", **extra)
+        gr.node(nname, label=f"({nname}) : {legend}", **extra)
     for e in edges:
         (amont, aval, legende) = e
         if amont and aval:
