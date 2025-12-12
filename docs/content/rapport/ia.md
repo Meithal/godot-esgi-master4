@@ -112,3 +112,17 @@ est superieure ou egale a la velur de seuil.
 On doit donc ajouter de la ponderation a chaque connexion (axone),
 cette pondération doit nécessairement pouvoir prendre une valeur négative
 si l'on souhaite pourvoir simuler une porte NON.
+
+Backpropagation
+---
+
+Si on veut que notre reseau soit capable d'apprendre, on
+doit donner une direction d'apprentissage, donc la sortie
+attendue devient -1 et +1. Pareillement il ne s'agit
+plus d'emuler un bit (0/1) mais de trouver la sortie
+la plus probable. On a donc deux sorties, une pour
+zero et une pour 1.
+
+Probleme lorsqu'on veut renforcer la sortier zero quand 
+les deux inputs sont a zero, on mutiplie
+$w <- w + \eta y_i x_i$
