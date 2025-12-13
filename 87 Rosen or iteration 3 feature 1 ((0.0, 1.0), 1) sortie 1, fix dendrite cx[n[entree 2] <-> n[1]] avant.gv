@@ -1,0 +1,16 @@
+digraph "87 Rosen or iteration 3 feature 1 ((0.0, 1.0), 1) sortie 1, fix dendrite cx[n[entree 2] <-> n[1]] avant" {
+	"entree 1" [label="(entree 1) : 0.0 ~ 0.1" ""=""]
+	"entree 2" [label="(entree 2) : 1.0 ~ 0.1" ""=""]
+	0 [label="(0) : 1 ~ 0.2" ""=""]
+	1 [label="(1) : 1 ~ -0.1" ""=""]
+	optique [label="(optique) : optique" color=green]
+	sortie [label="(sortie) : sortie" color=red]
+	optique -> "entree 1" [label="1.0 (0.0)"]
+	optique -> "entree 2" [label="1.0 (1.0)"]
+	0 -> sortie [label="1.0 (None)"]
+	"entree 1" -> 0 [label="0.8 (None)"]
+	"entree 2" -> 0 [label="0.7000000000000001 (None)"]
+	1 -> sortie [label="1.0 (None)"]
+	"entree 1" -> 1 [label="1.2000000000000002 (None)"]
+	"entree 2" -> 1 [label="1.2000000000000002 (None)"]
+}

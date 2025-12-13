@@ -21,7 +21,7 @@ Avoir une classe pour cela permet de lui donner un nom, et de fournir
 des outils pour différiencier le neurones d'entrée, de sortie et
 intermédiaires.
 
-Dans la première version, les neurones avaient un 
+Dans la première version, les neurones avaient un
 simple attribut "entrees", qui
 est une liste de neurones, ce qui
 etait suffisant pour les visualiser via graphviz.
@@ -58,7 +58,7 @@ chaque neurone lit les connexions amont, fait la somme,
 puis écrit le résultat dans le neurone de sortie.
 
 Le problème avec ce système est qu'on répète l'information
-de sortie dans toutes les connexions sortantes, donc 
+de sortie dans toutes les connexions sortantes, donc
 pour les neurones intermédiaires on décide que c'est le neurone
 lui même qui con tient la valeur qu'il a calculé, et lorsqu'un
 neurone fils veut connaitre la veleur de son parent, il
@@ -79,16 +79,16 @@ ceci n'est pas autorisé
 
 ```graphviz
 digraph "Reseau de neurones" {
-	1 [label="1: 0.0"]
-	2 [label="2: 0.0"]
-	3 [label="3: 0.0"]
-	4 [label="4: 0.0"]
-	OUT [label="OUT: 0.0"]
-	1 -> OUT [label=0.0]
-	2 -> OUT [label=0.0]
-	3 -> OUT [label=0.0]
-	4 -> OUT [label=0.0]
-	-> 1 [label=entree]
+    1 [label="1: 0.0"]
+    2 [label="2: 0.0"]
+    3 [label="3: 0.0"]
+    4 [label="4: 0.0"]
+    OUT [label="OUT: 0.0"]
+    1 -> OUT [label=0.0]
+    2 -> OUT [label=0.0]
+    3 -> OUT [label=0.0]
+    4 -> OUT [label=0.0]
+    -> 1 [label=entree]
 }
 ```
 
@@ -97,9 +97,9 @@ pour ignorer les entrées vers le néant.
 
 Reparer la visualisation permet de détecter
 que notre cas de test AND ne fonctionne pas bien
-car une entrée mise a 1 sur 10 avec un seuil de 10 active 
+car une entrée mise a 1 sur 10 avec un seuil de 10 active
 notre neurone : on fait la somme sans verifier le seuil, et
-au lieu d'écrire 1 dans la connexion de sortie on écrit 
+au lieu d'écrire 1 dans la connexion de sortie on écrit
 la somme elle même. Un neurone de Pitts fonctionne uniquement
 de manière booleenne donc l'information de la somme des
 neurones avals est perdue.
@@ -123,6 +123,32 @@ plus d'emuler un bit (0/1) mais de trouver la sortie
 la plus probable. On a donc deux sorties, une pour
 zero et une pour 1.
 
-Probleme lorsqu'on veut renforcer la sortier zero quand 
+Probleme lorsqu'on veut renforcer la sortier zero quand
 les deux inputs sont a zero, on mutiplie
 $w <- w + \eta y_i x_i$
+Mais pour zero le poids ne change pas, du coup il faut
+compter sur le biais qui ne depend pas de la valeur
+d'entree pour qu'il y a it une fluctuation.
+La sortie 0 pour les entrees (0,0) ne peut donc etre
+renforcee que par son propre biais.
+Quand on backpropagate dans l'ordre (0,0), (0, 1), (1, 0)
+et (1, 1), le biais diminue sur la sortie "0"
+(plus passant), puis augmente sur les trois autres sets,
+du coup on se rend compte qu'on ne pourra jamais
+rendre le reseau fonctionnel pour les entrees (0, 0)
+sortie 0.
+
+Une amelioration a cela est sur chaque iteration
+de ne fix que les features qui ne marchent pas, car dans notre
+cas apres une iteration les entrees (0, 1), (1, 0) et (1, 1)
+fonctionnent, et simplement fixer le biais ne casse
+pas les autres features, avant deux iteration. Donc
+donner 3 iterations sur juste (0, 0) pour 1 iteration
+sur les autres est le seul moyen d'avoir une convergence.
+
+La façons la moins couteuse en energie semble de
+ne backpropager sur chaque iteration complete de test
+que la feature qui ne fonctionne pas. Cela evite que des features
+qui fonctionnent deja ne tirent vers le bas des features
+qu'on veut renforcer et qui ont moins d'impact sur
+le poids global.

@@ -1,0 +1,16 @@
+digraph "104 Rosen or iteration 2 feature 2 ((1.0, 0.0), 1) sortie 1, apres fix son propre biais" {
+	"entree 1" [label="(entree 1) : 1.0 ~ 0.1" ""=""]
+	"entree 2" [label="(entree 2) : 0.0 ~ 0.1" ""=""]
+	0 [label="(0) : 1 ~ 0.30000000000000004" ""=""]
+	1 [label="(1) : 1 ~ -0.30000000000000004" ""=""]
+	optique [label="(optique) : optique" color=green]
+	sortie [label="(sortie) : sortie" color=red]
+	optique -> "entree 1" [label="1.0 (1.0)"]
+	optique -> "entree 2" [label="1.0 (0.0)"]
+	0 -> sortie [label="1.0 (None)"]
+	"entree 1" -> 0 [label="0.7000000000000001 (None)"]
+	"entree 2" -> 0 [label="0.7000000000000001 (None)"]
+	1 -> sortie [label="1.0 (None)"]
+	"entree 1" -> 1 [label="1.3000000000000003 (None)"]
+	"entree 2" -> 1 [label="1.3000000000000003 (None)"]
+}
