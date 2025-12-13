@@ -8,10 +8,13 @@ from collections import deque
 
 T = TypeVar('T')
 
-import graph
+from . import graph
+
 class SetDeque(Generic[T]):
-    """Un deque qui verifie l'unicité des
-    éléments qui s'y trouvent."""
+    """
+    Un deque qui verifie l'unicité des
+    éléments qui s'y trouvent.
+    """
     def __init__(self) -> None:
         self._set: set[T] = set()
         self._deque: deque[T] = deque()
@@ -25,7 +28,7 @@ class SetDeque(Generic[T]):
         self._deque.append(thing)
 
     def pop(self) -> T:
-        thing = self._deque.pop()
+        thing = self._deque.popleft()
         self._set.remove(thing)
         return thing
 

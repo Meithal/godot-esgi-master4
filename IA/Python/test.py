@@ -1,6 +1,21 @@
 import unittest
 
-import neurones
+from . import neurones
+
+class TestDeque(unittest.TestCase):
+    """
+    Teste deque
+    """
+    def test_good_order(self) -> None:
+        next_neurons = neurones.SetDeque[int]()
+        next_neurons.append(1)
+        next_neurons.append(2)
+        val = next_neurons.pop()
+        self.assertEqual(val, 1) ## on verifie bien qu'on enleve la valeur mise en premier
+        next_neurons.append(3)
+        next_neurons.append(4)
+        self.assertEqual(next_neurons.pop(), 2)
+        self.assertEqual(len(next_neurons), 2)
 
 class TestPittsMacCulloch(unittest.TestCase):
     """
