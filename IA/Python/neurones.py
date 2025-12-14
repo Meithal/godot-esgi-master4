@@ -69,7 +69,7 @@ def d_logi_from_logi(a: float) -> float:
     return a * (1 - a)
 
 def tanh(v:float, s:float) -> float:
-    return math.tanh(v + s)
+    return math.tanh(v - s)
 
 def d_tanh_from_tanh(a: float) -> float:
     """
@@ -352,9 +352,9 @@ class Reseau:
             grad = cx.amont.value * cx.aval.ecart
             cx.poids -= learning_rate * grad
 
-        # mis a jour des biais
+        # mis a jour des biais (forward uses z = sum - bias, so sign flips)
         for n in self.neurones:
-            n.biais -= learning_rate * n.ecart
+            n.biais += learning_rate * n.ecart
             if debug:
                 print(f"biais {n.name} = {n.biais}")
 
@@ -420,7 +420,8 @@ class Reseau:
         # -----------------
         for n in self.neurones:
             if not n.is_entry():
-                n.biais -= learning_rate * n.ecart
+                # forward uses z = sum - bias, so update bias with opposite sign
+                n.biais += learning_rate * n.ecart
 
     def train(self, known: dict[tuple[float, ...], int], outputs: list[str], 
               max_iterations: int = 15, learning_rate: float=0.25, debug: bool=False,

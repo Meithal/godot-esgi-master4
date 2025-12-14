@@ -116,3 +116,9 @@ L’intégration Godot repose sur :
 
 Projet réalisé dans le cadre du module  
 **Biomimétisme/ moteur Godot ESGI— 2025**  
+
+## Training avec notre lib
+
+- Run Training: Run train_from_demos.py to aggregate demos and produce model_weights.txt. I can run it now.
+- Build Native Lib: Run make in SoftmaxC to build libsoftmodel.dylib and copy it into godot.
+- Test In-Game: Build/run the Godot project (or dotnet build in godot) and verify the "Play like me" flow using the trained native model.

@@ -44,6 +44,7 @@ namespace FlappyCore
         public float Height => WORLD_HEIGHT;
         public Vector2[] Obstacles => _obstacles;
         public Vector2 BirdPosition => _bird.Position;
+            public float BirdVerticalSpeed => _bird.Speed.Y;
         public float BirdRadius => _bird.Radius;
 
         public int ObstaclesPasses = 0;

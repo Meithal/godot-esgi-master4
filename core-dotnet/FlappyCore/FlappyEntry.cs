@@ -89,7 +89,7 @@ namespace FlappyCore
                 var birdPos = game.BirdPosition;
                 output.FlappyX = birdPos.X;
                 output.FlappyHeight = birdPos.Y;
-                output.FlappyVerticalSpeed = 0;
+                output.FlappyVerticalSpeed = game.BirdVerticalSpeed;
                 output.GameOver = game.IsGameOver;
 
                 // Synchroniser le tableau d’obstacles avec celui du jeu
