@@ -1,17 +1,8 @@
-CC=clang
-CFLAGS=-Wall -O2 -fPIC
-TARGET=libsoftmodel.dylib
-SRCS=softmax.c
-
-all: $(TARGET)
-
-$(TARGET): $(SRCS)
-	$(CC) $(CFLAGS) -dynamiclib -o $(TARGET) $(SRCS) -lm
-
-clean:
-	rm -f $(TARGET)
 CC = gcc
-CFLAGS = -std=c11 -O2
+# Use ?= to allow environment override, but we usually want to append
+# So we will just use standard += logic in the targets if needed, or rely on command line override
+CFLAGS ?= -std=c11 -O2
+LDLIBS = -lm
 LDLIBS = -lm
 
 SRC = main.c lib.c
@@ -27,8 +18,10 @@ all: build lib
 build:
 	$(CC) $(CFLAGS) -o $(OUT) $(SRC) $(LDLIBS)
 
-lib:
-	$(CC) -dynamiclib -o $(LIB_OUT) $(LIB_SRC) $(LDLIBS)
+lib: $(LIB_OUT)
+
+$(LIB_OUT): $(LIB_SRC)
+	$(CC) $(CFLAGS) -dynamiclib -o $(LIB_OUT) $(LIB_SRC) $(LDLIBS)
 
 run: build
 	./$(OUT) 0.1 20000 42

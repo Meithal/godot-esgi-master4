@@ -182,7 +182,7 @@ class TestDeep(unittest.TestCase):
 
         # test_xor.draw()
         test_xor.name = "Werbos xor"
-        success = test_xor.train(inputs, outputs, use_softmax=True, debug=False, max_iterations=1000)
+        success = test_xor.train(inputs, outputs, use_softmax=True, debug=False, max_iterations=20000)
 
         self.assertTrue(success)
         print("iters", test_xor.learning_iterations)

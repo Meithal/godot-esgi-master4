@@ -19,7 +19,7 @@ limit_end = Vector2(100000000, 10000000)
 
 [node name="Sprite2D" type="Sprite2D" parent="Parallax2D"]
 z_index = -9
-position = Vector2(1064, 233)
+position = Vector2(304, -72.00003)
 scale = Vector2(3.7672222, 3.8462298)
 texture = ExtResource("3_vvh5c")
 

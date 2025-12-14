@@ -207,7 +207,7 @@ public partial class Root : Node2D
 			bool writeHeader = !File.Exists(_demoPath);
 			_recorder = new StreamWriter(_demoPath, append: true);
 			if (writeHeader) {
-				_recorder.WriteLine("time,flappyHeight,flappyX,verticalSpeed,distToRoof,nearest_dx,nearest_y,passes,action");
+				_recorder.WriteLine("time;flappyHeight;flappyX;verticalSpeed;distToRoof;nearest_dx;nearest_y;passes;action");
 				_recorder.Flush();
 			}
 		} catch (Exception ex) {
@@ -327,6 +327,19 @@ public partial class Root : Node2D
 					return;
 				}
 
+		// Check if bird hit obstacle or boundary
+		if (_output.GameOver)
+		{
+			GD.Print("[Root] Game Over - bird hit obstacle!");
+			_isPlaying = false;
+			if (_recorder != null) {
+				_recorder.Close();
+				_recorder = null;
+			}
+			_gameOverPanel.Visible = true;
+			return;
+		}
+
 		_bird.Position = new Vector2(100, MapY(_output.FlappyHeight));
 
 		UpdateObstacles();
@@ -342,7 +355,7 @@ public partial class Root : Node2D
 			try { passes = _core.GetObstaclesPasses(); } catch { passes = 0; }
 
 			// Write raw (unnormalized) features so the trainer's normalization is correct
-			_recorder.WriteLine($"{_core.GameTime},{_output.FlappyHeight:F6},{_output.FlappyX:F6},{verticalSpeed:F6},{distToRoof:F6},{nearest_dx:F6},{nearest_y:F6},{passes},{actionLabel}");
+			_recorder.WriteLine($"{_core.GameTime};{_output.FlappyHeight:F6};{_output.FlappyX:F6};{verticalSpeed:F6};{distToRoof:F6};{nearest_dx:F6};{nearest_y:F6};{passes};{actionLabel}");
 			_recorder.Flush();
 		}
 	}

@@ -7,7 +7,12 @@ net = neurones.werbos_hidden(num_entries=2, sorties=outputs, hidden=[2])
 net.name = "Werbos xor debug"
 print(net)
 
-success = net.train(inputs, outputs, use_softmax=True, debug=True, max_iterations=1000)
+print("INITIAL WEIGHTS:")
+for c in net.connexions:
+    if c.amont and c.aval:
+        print(f"{c.amont.name} -> {c.aval.name}: {c.poids}")
+
+success = net.train(inputs, outputs, use_softmax=True, debug=True, max_iterations=10000)
 print('success', success)
 print('iterations', net.learning_iterations)
 for n in net.neurones:

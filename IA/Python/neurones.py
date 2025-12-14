@@ -4,6 +4,7 @@ import math
 
 from typing import Generic, TypeVar, Iterator, Callable, Iterable, Literal
 from collections import deque
+import random
 
 
 T = TypeVar('T')
@@ -453,8 +454,7 @@ class Reseau:
                     if debug:
                         print(f"resultat insatisfaisant feature {feat}, classification {c} fix", file=sys.stderr)
                     if use_softmax:
-                        self.fix_chain_rule(feat, {ot: 1}, learning_rate, debug)
-                        # self.fix_chain_rule_softmax(feat, ot, learning_rate, debug)
+                        self.fix_chain_rule_softmax(feat, ot, learning_rate, debug)
                     else:
                         self.fix_rosen(feat, ot, learning_rate, debug) # on ne fix que l'exemple qui ne fonctionne pas, on force o_idx a zero
                     # self.draw(do_display=True, name=self.name + " iteration " + str(max_iterations))
@@ -581,18 +581,18 @@ def werbos_hidden(num_entries: int, sorties: list[str], hidden: list[int]= []) -
             nen.append(neuron)
             reseau.neurones += [neuron]
             for ne in en:
-                reseau.connexions += [Connexion(None, ne, neuron)]
+                reseau.connexions += [Connexion(None, ne, neuron, poids=random.uniform(-1, 1))]
         en = nen
 
     # neurone de sortie
     for sv in sorties:
         
-        sortie = Neurone(tanh, sv, d_value_f=d_tanh_from_tanh)
+        sortie = Neurone(act_identity, sv, d_value_f=lambda x: 1.0)
         reseau.neurones += [sortie]
         reseau.connexions += [Connexion(None, amont=sortie, aval=None)]
 
         for ne in en:
-            reseau.connexions += [Connexion(None, ne, sortie)]
+            reseau.connexions += [Connexion(None, ne, sortie, poids=random.uniform(-1, 1))]
 
     reseau.compute_entries()
     reseau.compute_sorties()

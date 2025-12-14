@@ -1,150 +1,222 @@
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
 
 static int loaded = 0;
-static int model_type = 0; /* 0=none, 1=linear, 2=mlp */
 
-/* Linear fallback */
-static double lin_weights[7] = {0};
-static double lin_bias = 0.0;
+/* MLP structures - Dynamic */
+static int mlp_nin = 0;
+static int mlp_num_layers = 0;
+static int *mlp_layer_sizes = NULL;
 
-/* MLP structures */
-static int mlp_nin = 0, mlp_h1 = 0, mlp_h2 = 0;
 static double *mlp_means = NULL;
 static double *mlp_stds = NULL;
-static double **mlp_W1 = NULL; /* h1 x nin */
-static double *mlp_b1 = NULL;  /* h1 */
-static double **mlp_W2 = NULL; /* h2 x h1 */
-static double *mlp_b2 = NULL;  /* h2 */
-static double *mlp_W3 = NULL;  /* h2 */
-static double mlp_b3 = 0.0;
+
+/* weights */
+static double ***mlp_W = NULL;
+static double **mlp_b = NULL;
 
 static double sigmoid(double x) { return 1.0 / (1.0 + exp(-x)); }
+static double tanh_activation(double x) { return tanh(x); }
 
-/* helper: read a line and parse expected_count doubles into dest (must be allocated) */
+/* helper: read a line and parse expected_count doubles into dest */
 static int parse_line_doubles(char *line, double *dest, int expected_count) {
-    char *tok = strtok(line, " \t\n\r");
-    int i = 0;
-    while (tok && i < expected_count) {
-        char *endptr = NULL;
-        dest[i] = strtod(tok, &endptr);
-        if (endptr == tok) return -1;
-        i++;
-        tok = strtok(NULL, " \t\n\r");
-    }
-    return (i == expected_count) ? 0 : -1;
+  char *tok = strtok(line, " \t\n\r");
+  int i = 0;
+  while (tok && i < expected_count) {
+    char *endptr = NULL;
+    dest[i] = strtod(tok, &endptr);
+    if (endptr == tok)
+      return -1;
+    i++;
+    tok = strtok(NULL, " \t\n\r");
+  }
+  return (i == expected_count) ? 0 : -1;
 }
 
 static void try_load() {
-    if (loaded) return;
-    FILE *f = fopen("model_weights.txt", "r");
-    if (!f) { loaded = 1; return; }
+  if (loaded)
+    return;
 
-    char buf[4096];
-    if (!fgets(buf, sizeof(buf), f)) { fclose(f); loaded = 1; return; }
-    if (strncmp(buf, "MLP", 3) == 0) {
-        /* parse header: MLP n_in h1 h2 */
-        if (sscanf(buf, "MLP %d %d %d", &mlp_nin, &mlp_h1, &mlp_h2) != 3) {
-            fclose(f); loaded = 1; return;
-        }
-        /* allocate means/stds */
-        mlp_means = (double*)malloc(sizeof(double)*mlp_nin);
-        mlp_stds = (double*)malloc(sizeof(double)*mlp_nin);
-        /* read means */
-        if (!fgets(buf, sizeof(buf), f)) { fclose(f); loaded = 1; return; }
-        if (parse_line_doubles(buf, mlp_means, mlp_nin) != 0) { fclose(f); loaded = 1; return; }
-        /* read stds */
-        if (!fgets(buf, sizeof(buf), f)) { fclose(f); loaded = 1; return; }
-        if (parse_line_doubles(buf, mlp_stds, mlp_nin) != 0) { fclose(f); loaded = 1; return; }
+  const char *paths[] = {"model_weights.txt",
+                         "../IA/SoftmaxC/model_weights.txt",
+                         "IA/SoftmaxC/model_weights.txt"};
 
-        /* allocate W1 and read h1 rows */
-        mlp_W1 = (double**)malloc(sizeof(double*)*mlp_h1);
-        for (int i = 0; i < mlp_h1; ++i) {
-            mlp_W1[i] = (double*)malloc(sizeof(double)*mlp_nin);
-            if (!fgets(buf, sizeof(buf), f)) { fclose(f); loaded = 1; return; }
-            if (parse_line_doubles(buf, mlp_W1[i], mlp_nin) != 0) { fclose(f); loaded = 1; return; }
-        }
-        /* read b1 */
-        mlp_b1 = (double*)malloc(sizeof(double)*mlp_h1);
-        if (!fgets(buf, sizeof(buf), f)) { fclose(f); loaded = 1; return; }
-        if (parse_line_doubles(buf, mlp_b1, mlp_h1) != 0) { fclose(f); loaded = 1; return; }
+  FILE *f = NULL;
+  for (int i = 0; i < 3; ++i) {
+    f = fopen(paths[i], "r");
+    if (f) {
+      break;
+    }
+  }
 
-        /* W2 */
-        mlp_W2 = (double**)malloc(sizeof(double*)*mlp_h2);
-        for (int i = 0; i < mlp_h2; ++i) {
-            mlp_W2[i] = (double*)malloc(sizeof(double)*mlp_h1);
-            if (!fgets(buf, sizeof(buf), f)) { fclose(f); loaded = 1; return; }
-            if (parse_line_doubles(buf, mlp_W2[i], mlp_h1) != 0) { fclose(f); loaded = 1; return; }
-        }
-        mlp_b2 = (double*)malloc(sizeof(double)*mlp_h2);
-        if (!fgets(buf, sizeof(buf), f)) { fclose(f); loaded = 1; return; }
-        if (parse_line_doubles(buf, mlp_b2, mlp_h2) != 0) { fclose(f); loaded = 1; return; }
+  if (!f) {
+    return;
+  }
 
-        /* W3 (single row of h2) */
-        mlp_W3 = (double*)malloc(sizeof(double)*mlp_h2);
-        if (!fgets(buf, sizeof(buf), f)) { fclose(f); loaded = 1; return; }
-        if (parse_line_doubles(buf, mlp_W3, mlp_h2) != 0) { fclose(f); loaded = 1; return; }
-        /* b3 */
-        if (!fgets(buf, sizeof(buf), f)) { fclose(f); loaded = 1; return; }
-        if (sscanf(buf, "%lf", &mlp_b3) != 1) { fclose(f); loaded = 1; return; }
+  char buf[4096];
+  if (!fgets(buf, sizeof(buf), f)) {
+    fclose(f);
+    loaded = 1;
+    return;
+  }
 
-        model_type = 2;
+  /* Check for MLP header */
+  if (strncmp(buf, "MLP", 3) != 0) {
+    /* Invalid format (or legacy), just fail silently or keep default 0 output
+     */
+    fclose(f);
+    loaded = 1;
+    return;
+  }
+
+  /* Parse MLP header: MLP <nin> <nlayers> <l1> <l2> ... */
+  char *ptr = buf + 4; // Skip "MLP "
+  mlp_nin = (int)strtol(ptr, &ptr, 10);
+  mlp_num_layers = (int)strtol(ptr, &ptr, 10);
+
+  if (mlp_num_layers <= 0) {
+    fclose(f);
+    loaded = 1;
+    return;
+  }
+
+  /* Allocate layer sizes */
+  mlp_layer_sizes = (int *)malloc(sizeof(int) * mlp_num_layers);
+  for (int k = 0; k < mlp_num_layers; ++k) {
+    mlp_layer_sizes[k] = (int)strtol(ptr, &ptr, 10);
+  }
+
+  /* Read normalization stats (means, stds) */
+  mlp_means = (double *)malloc(sizeof(double) * mlp_nin);
+  mlp_stds = (double *)malloc(sizeof(double) * mlp_nin);
+
+  /* Line 2: Means */
+  if (!fgets(buf, sizeof(buf), f) ||
+      parse_line_doubles(buf, mlp_means, mlp_nin) != 0) {
+    fclose(f);
+    loaded = 1;
+    return;
+  }
+
+  /* Line 3: Stds */
+  if (!fgets(buf, sizeof(buf), f) ||
+      parse_line_doubles(buf, mlp_stds, mlp_nin) != 0) {
+    fclose(f);
+    loaded = 1;
+    return;
+  }
+
+  /* Allocate structure */
+  mlp_W = (double ***)malloc(sizeof(double **) * mlp_num_layers);
+  mlp_b = (double **)malloc(sizeof(double *) * mlp_num_layers);
+
+  /* Read layers */
+  for (int k = 0; k < mlp_num_layers; ++k) {
+    int din = (k == 0) ? mlp_nin : mlp_layer_sizes[k - 1];
+    int dout = mlp_layer_sizes[k];
+
+    /* Allocate W[k] (rows = dout) */
+    mlp_W[k] = (double **)malloc(sizeof(double *) * dout);
+    for (int r = 0; r < dout; ++r) {
+      mlp_W[k][r] = (double *)malloc(sizeof(double) * din);
+      if (!fgets(buf, sizeof(buf), f) ||
+          parse_line_doubles(buf, mlp_W[k][r], din) != 0) {
         fclose(f);
         loaded = 1;
         return;
+      }
     }
 
-    /* Not MLP: fall back to legacy linear format. Try to parse up to 7 doubles + bias from file start. */
-    rewind(f);
-    int read = 0;
-    for (int i = 0; i < 7; ++i) {
-        if (fscanf(f, "%lf", &lin_weights[i]) == 1) read++; else lin_weights[i] = 0.0;
+    /* Allocate b[k] (dout values) */
+    mlp_b[k] = (double *)malloc(sizeof(double) * dout);
+    if (!fgets(buf, sizeof(buf), f) ||
+        parse_line_doubles(buf, mlp_b[k], dout) != 0) {
+      fclose(f);
+      loaded = 1;
+      return;
     }
-    if (fscanf(f, "%lf", &lin_bias) != 1) lin_bias = 0.0;
-    if (read > 0) model_type = 1; else model_type = 0;
-    fclose(f);
-    loaded = 1;
+  }
+
+  fclose(f);
+  loaded = 1;
 }
 
-static double tanh_activation(double x) { return tanh(x); }
+int predict(double fh, double fx, double vs, double distRoof, double dx,
+            double oy, double passes) {
+  try_load();
 
-int predict(double fh, double fx, double vs, double distRoof, double dx, double oy, double passes) {
-    try_load();
-    if (model_type == 2) {
-        /* normalize inputs */
-        double x[16]; /* small fixed buffer for up to 16 inputs */
-        if (mlp_nin > 16) return 0; /* unexpected */
-        double invals[16];
-        invals[0] = fh; invals[1] = fx; invals[2] = vs; invals[3] = distRoof; invals[4] = dx; invals[5] = oy;
-        if (mlp_nin == 7) invals[6] = passes;
-        for (int i = 0; i < mlp_nin; ++i) x[i] = (invals[i] - mlp_means[i]) / mlp_stds[i];
-        /* layer1 */
-        double a1[64];
-        if (mlp_h1 > 64) return 0;
-        for (int i = 0; i < mlp_h1; ++i) {
-            double s = mlp_b1[i];
-            for (int j = 0; j < mlp_nin; ++j) s += mlp_W1[i][j] * x[j];
-            a1[i] = tanh_activation(s);
-        }
-        /* layer2 */
-        double a2[64];
-        if (mlp_h2 > 64) return 0;
-        for (int i = 0; i < mlp_h2; ++i) {
-            double s = mlp_b2[i];
-            for (int j = 0; j < mlp_h1; ++j) s += mlp_W2[i][j] * a1[j];
-            a2[i] = tanh_activation(s);
-        }
-        /* output */
-        double s = mlp_b3;
-        for (int j = 0; j < mlp_h2; ++j) s += mlp_W3[j] * a2[j];
-        double p = sigmoid(s);
-        return (p >= 0.5) ? 1 : 0;
-    } else if (model_type == 1) {
-        double sum = fh*lin_weights[0] + fx*lin_weights[1] + vs*lin_weights[2] + distRoof*lin_weights[3] + dx*lin_weights[4] + oy*lin_weights[5] + passes*lin_weights[6] + lin_bias;
-        double p = sigmoid(sum);
-        return (p >= 0.5) ? 1 : 0;
+  if (!mlp_W)
+    return 0; /* Model not loaded or failed */
+
+/* Normalization */
+/* Support up to 32 inputs for safety on stack */
+#define MAX_IN 32
+#define MAX_WIDTH 128
+
+  if (mlp_nin > MAX_IN) {
+    return 0; /* Too many inputs for static buffer */
+  }
+
+  double inputs[MAX_IN];
+  double current_act[MAX_WIDTH];
+  double next_act[MAX_WIDTH];
+
+  /* Populate inputs */
+  double raw_in[MAX_IN];
+  raw_in[0] = fh;
+  raw_in[1] = fx;
+  raw_in[2] = vs;
+  raw_in[3] = distRoof;
+  raw_in[4] = dx;
+  raw_in[5] = oy;
+  if (mlp_nin >= 7)
+    raw_in[6] = passes;
+  /* Zero out remainder */
+  for (int i = 7; i < mlp_nin; ++i)
+    raw_in[i] = 0.0;
+
+  /* Normalize */
+  for (int i = 0; i < mlp_nin; ++i) {
+    inputs[i] = (raw_in[i] - mlp_means[i]) / mlp_stds[i];
+  }
+
+  double *in_ptr = inputs;
+  int in_size = mlp_nin;
+
+  for (int k = 0; k < mlp_num_layers; ++k) {
+    int dout = mlp_layer_sizes[k];
+    if (dout > MAX_WIDTH)
+      return 0; /* Exceeds stack buffer */
+
+    for (int r = 0; r < dout; ++r) {
+      double s = mlp_b[k][r];
+      /* Dot product */
+      double *row = mlp_W[k][r];
+      for (int c = 0; c < in_size; ++c) {
+        s += row[c] * in_ptr[c];
+      }
+
+      /* Activation */
+      if (k == mlp_num_layers - 1) {
+        /* Output layer -> Sigmoid */
+        next_act[r] = sigmoid(s);
+      } else {
+        /* Hidden layer -> Tanh */
+        next_act[r] = tanh_activation(s);
+      }
     }
-    return 0;
+
+    /* Prepare for next layer */
+    for (int i = 0; i < dout; ++i)
+      current_act[i] = next_act[i];
+
+    in_ptr = current_act;
+    in_size = dout;
+  }
+
+  /* Final output is 1st element of last result */
+  double p = in_ptr[0];
+  return (p >= 0.5) ? 1 : 0;
 }
