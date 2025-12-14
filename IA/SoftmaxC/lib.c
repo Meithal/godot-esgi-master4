@@ -44,7 +44,12 @@ void forward(Network *net) {
             Connection *c = n->in[j];
             z += c->weight * c->from->value;
         }
-        n->value = act_tanh(z);
+        if (n->is_output) {
+            // outputs act as logits for softmax (identity)
+            n->value = z;
+        } else {
+            n->value = act_tanh(z);
+        }
     }
 }
 
@@ -71,16 +76,39 @@ void backprop_softmax(
     int target_index,
     double lr
 ) {
+    // compute deltas and apply updates (backwards-compatible)
+    compute_deltas_softmax(net, target_index);
+
+    // apply gradients immediately
+    double conn_grads[MAX_CONNS];
+    double bias_grads[MAX_NEURONS];
+    for (int i = 0; i < net->conn_count; ++i) conn_grads[i] = 0.0;
+    for (int i = 0; i < net->neuron_count; ++i) bias_grads[i] = 0.0;
+
+    // accumulate per-connection gradients based on current deltas
+    for (int i = 0; i < net->conn_count; ++i) {
+        Connection *c = &net->conns[i];
+        conn_grads[i] += c->from->value * c->to->delta;
+    }
+    for (int i = 0; i < net->neuron_count; ++i) {
+        Neuron *n = &net->neurons[i];
+        if (!n->is_input) bias_grads[i] += n->delta;
+    }
+
+    apply_gradients(net, lr, conn_grads, bias_grads, 1);
+}
+
+void compute_deltas_softmax(Network *net, int target_index) {
     double probs[MAX_OUT];
     softmax(net, probs);
 
-    // delta sortie
+    // output deltas (dL/dz for logits)
     for (int i = 0; i < net->out_count; i++) {
         double y = (i == target_index) ? 1.0 : 0.0;
         net->outputs[i]->delta = probs[i] - y;
     }
 
-    // delta cachées
+    // hidden deltas
     for (int i = net->neuron_count - 1; i >= 0; i--) {
         Neuron *n = &net->neurons[i];
         if (n->is_output || n->is_input) continue;
@@ -93,18 +121,23 @@ void backprop_softmax(
 
         n->delta = err * d_tanh_from_value(n->value);
     }
+}
 
-    // update poids
+void apply_gradients(Network *net, double lr, double *conn_grads, double *bias_grads, int normalize_by) {
+    double norm = (normalize_by > 0) ? (double)normalize_by : 1.0;
+    // update weights
     for (int i = 0; i < net->conn_count; i++) {
         Connection *c = &net->conns[i];
-        c->weight -= lr * c->from->value * c->to->delta;
+        c->weight -= lr * (conn_grads[i] / norm);
     }
 
-    // update biais
+    // update biases
     for (int i = 0; i < net->neuron_count; i++) {
         Neuron *n = &net->neurons[i];
         if (!n->is_input)
-            n->bias -= lr * n->delta;
+            // forward uses z = -bias + sum(w*x), so gradient dL/dbias = -delta
+            // therefore bias must be updated with opposite sign
+            n->bias += lr * (bias_grads[i] / norm);
     }
 }
 

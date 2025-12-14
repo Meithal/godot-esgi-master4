@@ -49,4 +49,8 @@ void backprop_softmax(
     int target_index,
     double lr
 );
+
+// New helpers: compute deltas (does not update weights) and apply gradients
+void compute_deltas_softmax(Network *net, int target_index);
+void apply_gradients(Network *net, double lr, double *conn_grads, double *bias_grads, int normalize_by);
 int classify(Network *net);
