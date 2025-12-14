@@ -281,7 +281,7 @@ class Reseau:
                     self.draw(do_display=False, name=f"{self.name} iteration {self.learning_iterations} feature {idx} {i} sortie {out_n.name}, apres fix son propre biais")
 
     def train(self, known: dict[tuple[float, ...], int], outputs: list[str], 
-              max_iterations: int = 10, learning_rate: float=0.25) -> bool:
+              max_iterations: int = 15, learning_rate: float=0.25, debug: bool=False) -> bool:
         """
         Donne une serie d'entrees et compare la sortie avec la sortie
         attendue. Tant que la sortie ne correspond pas a ce qui est attendu,
@@ -296,17 +296,24 @@ class Reseau:
         """
         while True:
             self.learning_iterations += 1
+            need_fixing = False
             for feat, o_idx in known.items():
                 ot = outputs[o_idx]
                 self.feed_entries(feat)
                 self.fire()
                 c = self.classification()
                 if not c or c.name != ot: ## aucune sortie ne s'allume ou la mauvaise sortie s'allume
-                    print(f"resultat insatisfaisant feature {feat}, classification {c} fix", file=sys.stderr)
-                    self.fix({feat: 0}, [ot], learning_rate) # on ne fix que l'exemple qui ne fonctionne pas, on force o_idx a zero
+                    if debug:
+                        print(f"resultat insatisfaisant feature {feat}, classification {c} fix", file=sys.stderr)
+                    self.fix({feat: 0}, [ot], learning_rate, debug) # on ne fix que l'exemple qui ne fonctionne pas, on force o_idx a zero
                     # self.draw(do_display=True, name=self.name + " iteration " + str(max_iterations))
+                    need_fixing = True
                 else:
-                    print(f"resultat correct feature {feat}, classification {c}", file=sys.stderr)
+                    if debug:
+                        print(f"resultat correct feature {feat}, classification {c}", file=sys.stderr)
+            ## plus besoin de fix
+            if need_fixing == False:
+                return True
             if self.learning_iterations > max_iterations:
                 return False
 

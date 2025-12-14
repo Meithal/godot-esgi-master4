@@ -152,3 +152,15 @@ que la feature qui ne fonctionne pas. Cela evite que des features
 qui fonctionnent deja ne tirent vers le bas des features
 qu'on veut renforcer et qui ont moins d'impact sur
 le poids global.
+
+Le premier fix dans ce sens a été fait dans le commit 494c60cda7d434f89cad8c8c89ac830272ea66fb
+
+<https://github.com/Meithal/godot-esgi-master4/commit/494c60cda7d434f89cad8c8c89ac830272ea66fb>
+
+Maintenant le prebleme qu'on a est que les features
+(1,0), (0,1), (1,1) affaibliisent beaucoup le biais
+de la sortie 1, considerant que le biais intrinseque
+d'un neurone de sortie est la seule variable
+d'ajustement pour l'entree (0,0), on veut que
+le biais dj neurone de sortie "1" reste haut meme
+si trois exemples sur 4 tendent a le faire baisser.

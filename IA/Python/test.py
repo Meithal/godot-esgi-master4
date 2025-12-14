@@ -105,14 +105,14 @@ class TestRosenblattWeights(unittest.TestCase):
         res = neurones.rosenblatt_perceptron(entries=2, sorties=outputs)
         res.name = "Rosen or"
         # res.draw()
-        res.train(inputs, outputs)
+        res.train(inputs, outputs, debug=False)
 
         for (inp, out) in inputs.items():
             res.feed_entries(inp)
             res.fire()
-            self.assertEqual(res.sorties[0].value, out)
+            self.assertIsNotNone(res.classification())
+            self.assertEqual(res.sorties[out].value, 1)
 
-    @unittest.skip("")
     def test_rosenblatt_and(self) -> None:
         outputs = ["0", "1"]
         inputs: dict[tuple[float, ...], int] = {(0.,0.): 0, (0.,1.): 0, (1.,0.): 0, (1.,1.): 1}
@@ -121,12 +121,12 @@ class TestRosenblattWeights(unittest.TestCase):
         test_and.name = "Rosen and"
         test_and.train(inputs, outputs)
 
-        for i, inp in enumerate(inputs):
+        for (inp, out) in inputs.items():
             test_and.feed_entries(inp)
             test_and.fire()
-            self.assertEqual(test_and.sorties[0].value, outputs[i])
+            self.assertIsNotNone(test_and.classification())
+            self.assertEqual(test_and.sorties[out].value, 1)
 
-    @unittest.skip("")
     def test_rosenblatt_not(self) -> None:
         outputs = ["0", "1"]
         inputs: dict[tuple[float, ...], int] = {(0.,): 1, (1.,): 0}
@@ -137,10 +137,11 @@ class TestRosenblattWeights(unittest.TestCase):
 
         # graph.dessine_reseau(test_not)
 
-        for i, inp in enumerate(inputs):
+        for (inp, out) in inputs.items():
             test_not.feed_entries(inp)
             test_not.fire()
-            self.assertEqual(test_not.sorties[0].value, outputs[i])
+            self.assertIsNotNone(test_not.classification())
+            self.assertEqual(test_not.sorties[out].value, 1)
 
 class TestLearnPerceptron(unittest.TestCase):
     def test_learn_and(self):
