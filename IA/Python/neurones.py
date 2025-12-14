@@ -135,10 +135,7 @@ class Connexion:
         if self.amont:
             return self.amont.value
         return 0
-    
-    def zero(self):
-        self.raw_value = 0
-    
+        
     def feed(self, value: float) -> None:
         self.raw_value = value
 
@@ -192,11 +189,13 @@ class Reseau:
     def zero_entries(self) -> None:
         for n in self.optiques:
             for e in n.entrees:
-                e.zero()
+                e.feed(0)
 
     def feed_entries(self, vals: tuple[float, ...]) -> None:
         for i, v in enumerate(vals):
             self.optiques[i].entrees[0].feed(v)
+        for n in self.neurones:
+            n.value = 0
     
     def get_neuron(self, at: int):
         return self.neurones[at]
@@ -282,30 +281,32 @@ class Reseau:
                     self.draw(do_display=False, name=f"{self.name} iteration {self.learning_iterations} feature {idx} {i} sortie {out_n.name}, apres fix son propre biais")
 
     def train(self, known: dict[tuple[float, ...], int], outputs: list[str], 
-              max_iterations: int = 3, learning_rate: float=0.1) -> bool:
+              max_iterations: int = 10, learning_rate: float=0.25) -> bool:
         """
         Donne une serie d'entrees et compare la sortie avec la sortie
         attendue. Tant que la sortie ne correspond pas a ce qui est attendu,
         ajuste les poids pour obtenir ce qu'on cherche.
+        Pour permette une convergence on ne retro propage que les doublets 
+        qui ne fonctionnent pas.
 
         Essaye :max_iterations: fois avant d'abandonner (ce qui arrive dans les
         configurations de donnees non lineairement separables)
+
+        On prend un learnig rate multiple de 2 qui evite d'avoir des mantisses illisibles
         """
         while True:
             self.learning_iterations += 1
-            for idx, feat in enumerate(known):
-                ot = outputs[idx]
+            for feat, o_idx in known.items():
+                ot = outputs[o_idx]
                 self.feed_entries(feat)
                 self.fire()
                 c = self.classification()
                 if not c or c.name != ot: ## aucune sortie ne s'allume ou la mauvaise sortie s'allume
-                    print("resultat insatisfaisant, fix", file=sys.stderr)
-                    self.fix(known, outputs, learning_rate)
+                    print(f"resultat insatisfaisant feature {feat}, classification {c} fix", file=sys.stderr)
+                    self.fix({feat: 0}, [ot], learning_rate) # on ne fix que l'exemple qui ne fonctionne pas, on force o_idx a zero
                     # self.draw(do_display=True, name=self.name + " iteration " + str(max_iterations))
-                    break
-
-            else:
-                return True
+                else:
+                    print(f"resultat correct feature {feat}, classification {c}", file=sys.stderr)
             if self.learning_iterations > max_iterations:
                 return False
 
@@ -319,7 +320,7 @@ class Reseau:
             edges=[(
                 c.amont and c.amont.name or "optique", 
                 c.aval and c.aval.name or "sortie", 
-                f"{c.poids} ({c.raw_value})") 
+                f"{c.poids}" +  (f" ({c.raw_value})" if c.raw_value is not None else "")) 
                    for c in self.connexions], 
             do_display=do_display
         )

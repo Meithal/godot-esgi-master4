@@ -93,7 +93,7 @@ class TestPittsMacCulloch(unittest.TestCase):
             res.fire()
             self.assertEqual(res.sorties[0].value, outputs[i])
 
-@unittest.skip("")
+#@unittest.skip("")
 class TestRosenblattWeights(unittest.TestCase):
     """
     Les poids negatifs de rosenblatt simulent le NOT
