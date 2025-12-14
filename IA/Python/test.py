@@ -109,6 +109,7 @@ class TestRosenblattWeights(unittest.TestCase):
         for (inp, out) in inputs.items():
             res.feed_entries(inp)
             res.fire()
+
             self.assertIsNotNone(res.classification())
             self.assertEqual(res.sorties[out].value, 1)
 
@@ -164,7 +165,7 @@ class TestDeep(unittest.TestCase):
     """
     Des couches cachées permettent de gérer le XOR
     """
-    def test_rosenblatt_xor_hidden_layer(self) -> None:
+    def test_xor(self) -> None:
         """
         Implementation couche cachée.
         """
@@ -173,19 +174,19 @@ class TestDeep(unittest.TestCase):
             (0.,0.): 0, (0.,1.): 1, (1.,0.): 1, (1.,1.): 0
         }
 
-        test_xor = neurones.rosenblatt_perceptron(
+        test_xor = neurones.werbos_hidden(
             num_entries=len(next(iter(inputs))), 
             sorties=outputs,
             hidden = [2], # une couche de deux neurones
         )
 
         # test_xor.draw()
-        test_xor.name = "Rosen xor"
-        success = test_xor.train(inputs, outputs)
+        test_xor.name = "Werbos xor"
+        success = test_xor.train(inputs, outputs, use_softmax=True, debug=False, max_iterations=1000)
 
-        self.assertFalse(success)
-
-        # test_xor.draw()
+        self.assertTrue(success)
+        print("iters", test_xor.learning_iterations)
+        test_xor.draw()
 
 def main():
 

@@ -2,7 +2,7 @@
 import sys
 import math
 
-from typing import Generic, TypeVar, Iterator, Callable
+from typing import Generic, TypeVar, Iterator, Callable, Iterable, Literal
 from collections import deque
 
 
@@ -15,9 +15,11 @@ class SetDeque(Generic[T]):
     Un deque qui verifie l'unicité des
     éléments qui s'y trouvent.
     """
-    def __init__(self) -> None:
+    def __init__(self, kick:Iterable[T] = ()) -> None:
         self._set: set[T] = set()
         self._deque: deque[T] = deque()
+        for i in kick:
+            self.append(i)
     
     def append(self, thing: T):
         if thing in self._set:
@@ -58,8 +60,28 @@ def sign(value:float, seuil:float) -> float:
         return 0
 
 def logi(v:float, s:float) -> float:
-
     return 1 / (1 + math.exp(-v + s))
+
+def d_logi_from_logi(a: float) -> float:
+    """
+    a: doit etre une valeur obtenue via logi() précédemment
+    """
+    return a * (1 - a)
+
+def tanh(v:float, s:float) -> float:
+    return math.tanh(v + s)
+
+def d_tanh_from_tanh(a: float) -> float:
+    """
+    a: doit etre une valeur obtenue via tanh() précédemment
+    """
+    return 1 - a * a
+
+def softmax(values: list[float]) -> list[float]:
+    m = max(values)
+    exps = [math.exp(v - m) for v in values]
+    s = sum(exps)
+    return [e / s for e in exps]
 
 class Neurone:
     name: str
@@ -67,19 +89,29 @@ class Neurone:
     entrees: list['Connexion']
     sorties: list['Connexion']
     value: float = 0.0
+    ecart: float # apres feed forward, l'ecart entre le poids souhaité et réel
+    proba: float # uniquement pour les neurones de sortie, pour sortir la classification
 
     value_f : Callable[[float, float], float]
+    d_value_f : Callable[[float], float] # si on utilise backprop
 
-    def __init__(self, value_f : Callable[[float, float], float], name : str, seuil: float = 0) -> None:
+    def __init__(
+            self, value_f : Callable[[float, float], float], 
+            name : str, seuil: float = 0,
+            d_value_f: Callable[[float], float] = lambda x : x) -> None:
         self.name = name
         self.entrees = []
         self.sorties = []
         self.biais = seuil
         self.value = 0.0
+        self.ecart = 0.0
         self.value_f = value_f
+        self.d_value_f = d_value_f
     
     def __str__(self) -> str:
         return "n["+self.name+"]"
+    def __repr__(self) -> str:
+        return f"n[{self.name}] {self.proba:.3f}"
 
     def is_entry(self) -> bool:
         for e in self.entrees:
@@ -131,8 +163,10 @@ class Connexion:
         
     def value(self) -> float:
         # si on est un neurone d'entree, on retourne sa veleur interne
-        if self.raw_value:
-            return self.raw_value * self.poids
+        # attention a ne pas multiplier par le poids car on veut
+        # la valeur sans poids lors de la backprop
+        if self.raw_value is not None:
+            return self.raw_value
 
         if self.amont:
             return self.amont.value
@@ -151,6 +185,7 @@ class Reseau:
     connexions : list[Connexion]
     optiques : list[Neurone]
     sorties : list[Neurone]
+    nb_hidden_layers : int
 
     "la fonction a utiliser pour le neurone final"
     learning_iterations : int
@@ -163,6 +198,7 @@ class Reseau:
         self.optiques = []
         self.sorties = []
         self.connexions = []
+        self.nb_hidden_layers = 0
 
         self.learning_iterations = 0
         self.graphviz_draws = 0
@@ -202,15 +238,27 @@ class Reseau:
             if s.value > 0:
                 return s
         return None
+    
+    def classification_softmax(self) -> Neurone:
+        logits = [n.value for n in self.sorties]
+        probs = softmax(logits)
+
+        for n, p in zip(self.sorties, probs):
+            n.proba = p  # debug / affichage éventuel
+
+        return max(self.sorties, key=lambda n: n.proba)
+
+    def classification_werbos(self) -> Neurone | None:
+        if not self.sorties:
+            return None
+        return max(self.sorties, key=lambda n: n.value)
 
     def fire(self) -> None:
         """
         Fait travailler les neurones de la premiere couche, puis ceux
         des couches suivante, etc.
         """
-        next_neurons = SetDeque[Neurone]()
-        for en in self.optiques:
-            next_neurons.append(en)
+        next_neurons = SetDeque(self.optiques)
 
         while next_neurons:
             n = next_neurons.pop()
@@ -224,37 +272,32 @@ class Reseau:
                 if s.aval is not None:
                     next_neurons.append(s.aval) # on met la couche suivante
 
-    def fix(self, known: tuple[float, ...], 
+    def fix_rosen(self, known: tuple[float, ...], 
             output: str, learning_rate: float, debug: bool=True):
         """Fixe les poids, en partant de la sortie.
         On essaye chaque couple entree/sortie, et on modifie
         les poids selon l'algorithme de rosenblatt.
-        
-        Essaye de modifier le poids en fonction de la gigue
-        Si on n'obtient pas d'amelioration de la fonction
-        d'erreur dans l'un ou l'autre sens, on reduit le pas de
-        la gigue. Si le signe de l'erreur change, on reduit le pas,
-        sinon on l'augmente.
-        
+
+        Fonctionne mal avec couches cachees car chaque neurone
+        intermediaire ignore de combien il contribue a la sortie
+        vu qu'on utilise une fonction seuil.
+
+        Passer a une fonction sigmoide permet de deriver la contribution
+        d'un neurone et de connaitre sa force via la derivation.        
         todo: minima locaux (annealed reheat?)
         todo: penrose
         """
 
-        if debug:
-            self.draw(do_display=False, name=f"{self.name} iteration {self.learning_iterations} feature {known}, avant feed")
+        self.draw(do_display=False, name=f"{self.name} iteration {self.learning_iterations} feature {known}, avant feed", skip=not debug)
 
         self.feed_entries(known)
-        if debug:
-            self.draw(do_display=False, name=f"{self.name} iteration {self.learning_iterations} feature {known}, apres feed")
+        self.draw(do_display=False, name=f"{self.name} iteration {self.learning_iterations} feature {known}, apres feed", skip=not debug)
 
         self.fire()  # feed forward
-
-        if debug:
-            self.draw(do_display=False, name=f"{self.name} iteration {self.learning_iterations} feature {known}, apres propagation")
+        self.draw(do_display=False, name=f"{self.name} iteration {self.learning_iterations} feature {known}, apres propagation", skip=not debug)
         
         for out_n in self.sorties:
-            if debug:
-                self.draw(do_display=False, name=f"{self.name} iteration {self.learning_iterations} feature {known} sortie {out_n.name}, avant back propagation")
+            self.draw(do_display=False, name=f"{self.name} iteration {self.learning_iterations} feature {known} sortie {out_n.name}, avant back propagation", skip=not debug)
             
             ## si on itere sur la sortie q'on veut renforcer
             if out_n.name == output:
@@ -262,17 +305,126 @@ class Reseau:
             else:
                 ot = -1
             for w in out_n.entrees:
-                if debug:
-                    self.draw(do_display=False, name=f"{self.name} iteration {self.learning_iterations} feature {known} sortie {out_n.name}, fix dendrite {w} avant")
+                self.draw(do_display=False, name=f"{self.name} iteration {self.learning_iterations} feature {known} sortie {out_n.name}, fix dendrite {w} avant", skip=not debug)
                 w.poids = w.poids + learning_rate * ot * w.value()
-                if debug:
-                    self.draw(do_display=False, name=f"{self.name} iteration {self.learning_iterations} feature {known} sortie {out_n.name}, fix dendrite {w} apres")
+                self.draw(do_display=False, name=f"{self.name} iteration {self.learning_iterations} feature {known} sortie {out_n.name}, fix dendrite {w} apres", skip=not debug)
             out_n.biais = out_n.biais + learning_rate * ot * -1 ## -1 car quand on veut renforcer un biais pour une sortie donnee, on veut baisser le seuil au lieu de l'augmenter, et vice versa
+            self.draw(do_display=False, name=f"{self.name} iteration {self.learning_iterations} feature {known} sortie {out_n.name}, apres fix son propre biais", skip=not debug)
+
+    def fix_chain_rule(self, known: tuple[float, ...], 
+            expected_output: dict[str, Literal[-1, 1]], 
+            learning_rate: float, debug: bool=True):
+        """
+        Implément algorithme de werbos avec fonction continue, usage de dérivée
+        et chain rule.
+        """
+        self.feed_entries(known)
+        self.fire()
+
+        # erreur de la couche de sortie (ecart entre 1 et -1)
+        for out in self.sorties:
+            y = expected_output.get(out.name, -1.0)
+            a = out.value
+
+            # dL/da * da/dz
+            out.ecart = (a - y) * out.d_value_f(a)
             if debug:
-                self.draw(do_display=False, name=f"{self.name} iteration {self.learning_iterations} feature {known} sortie {out_n.name}, apres fix son propre biais")
+                print(f"delta sortie {out.name} = {out.ecart}")
+
+        # erreurs des couches cachées, héritées des erreurs des couches suivantes
+        for n in reversed(self.neurones):
+            if n.is_sortie() or n.is_entry():
+                continue
+            ecart = 0
+            for cx in n.sorties:
+                if cx.aval is not None:
+                    ecart += cx.aval.ecart * cx.poids
+            n.ecart = ecart * n.d_value_f(n.value)
+
+            if debug:
+                print(f"delta caché {n.name} = {n.ecart}")
+
+        # mis a jour des poids en fonction de l'ecart
+        for cx in self.connexions:
+            if cx.amont is None or cx.aval is None:
+                continue
+
+            grad = cx.amont.value * cx.aval.ecart
+            cx.poids -= learning_rate * grad
+
+        # mis a jour des biais
+        for n in self.neurones:
+            n.biais -= learning_rate * n.ecart
+            if debug:
+                print(f"biais {n.name} = {n.biais}")
+
+    def fix_chain_rule_softmax(
+        self,
+        known: tuple[float, ...],
+        target_output: str,
+        learning_rate: float,
+        debug: bool = True
+    ):
+        # -----------------
+        # Forward
+        # -----------------
+        self.feed_entries(known)
+        self.fire()
+
+        # -----------------
+        # Softmax sur sorties
+        # -----------------
+        logits = [n.value for n in self.sorties]
+        probs = softmax(logits)
+
+        # one-hot target
+        y = [1.0 if n.name == target_output else 0.0 for n in self.sorties]
+
+        # -----------------
+        # Delta couche sortie
+        # -----------------
+        for n, p, yi in zip(self.sorties, probs, y):
+            n.ecart = p - yi   # ← delta fondamental softmax + CE
+            if debug:
+                print(f"delta sortie {n.name} = {n.ecart:.4f}")
+
+        # -----------------
+        # Delta couches cachées
+        # -----------------
+        for n in reversed(self.neurones):
+            if n.is_sortie() or n.is_entry():
+                continue
+
+            err = 0.0
+            for cx in n.sorties:
+                if cx.aval is not None:
+                    err += cx.poids * cx.aval.ecart
+
+            n.ecart = err * n.d_value_f(n.value)
+
+            if debug:
+                print(f"delta caché {n.name} = {n.ecart:.4f}")
+
+        # -----------------
+        # Mise à jour poids
+        # -----------------
+        for cx in self.connexions:
+            if cx.amont is None or cx.aval is None:
+                continue
+
+            grad = cx.amont.value * cx.aval.ecart
+            cx.poids -= learning_rate * grad
+
+        # -----------------
+        # Mise à jour biais
+        # -----------------
+        for n in self.neurones:
+            if not n.is_entry():
+                n.biais -= learning_rate * n.ecart
 
     def train(self, known: dict[tuple[float, ...], int], outputs: list[str], 
-              max_iterations: int = 15, learning_rate: float=0.25, debug: bool=False) -> bool:
+              max_iterations: int = 15, learning_rate: float=0.25, debug: bool=False,
+              use_softmax:bool = False) -> bool:
         """
         Donne une serie d'entrees et compare la sortie avec la sortie
         attendue. Tant que la sortie ne correspond pas a ce qui est attendu,
@@ -292,11 +444,18 @@ class Reseau:
                 ot = outputs[o_idx]
                 self.feed_entries(feat)
                 self.fire()
-                c = self.classification()
+                if use_softmax:
+                    c = self.classification_werbos()
+                else:
+                    c = self.classification()
                 if not c or c.name != ot: ## aucune sortie ne s'allume ou la mauvaise sortie s'allume
                     if debug:
                         print(f"resultat insatisfaisant feature {feat}, classification {c} fix", file=sys.stderr)
-                    self.fix(feat, ot, learning_rate, debug) # on ne fix que l'exemple qui ne fonctionne pas, on force o_idx a zero
+                    if use_softmax:
+                        self.fix_chain_rule(feat, {ot: 1}, learning_rate, debug)
+                        # self.fix_chain_rule_softmax(feat, ot, learning_rate, debug)
+                    else:
+                        self.fix_rosen(feat, ot, learning_rate, debug) # on ne fix que l'exemple qui ne fonctionne pas, on force o_idx a zero
                     # self.draw(do_display=True, name=self.name + " iteration " + str(max_iterations))
                     need_fixing = True
                 else:
@@ -306,19 +465,22 @@ class Reseau:
             if need_fixing == False:
                 return True
             if self.learning_iterations > max_iterations:
+                # self.draw()
                 return False
 
-    def draw(self, do_display: bool = True, name: str = ""):
+    def draw(self, do_display: bool = True, name: str = "", skip: bool=False):
+        if skip: ## evite d'avoir des if debug: partout
+            return
         graph.dessine(
             f"{self.graphviz_draws} {name or self.name}", 
             nodes=
-              [(n.name, f"{n.value} ~ {n.biais}", {'':''}) for n in self.neurones]
+              [(n.name, f"{n.value:.3f} ~ {n.biais:.3f}" + (f" d: {n.ecart:.3f}" if n.ecart else ""), {'':''}) for n in self.neurones]
               + [("optique", "optique", {'color': 'green'})]
               + [("sortie", "sortie", {'color': 'red'})], 
             edges=[(
                 c.amont and c.amont.name or "optique", 
                 c.aval and c.aval.name or "sortie", 
-                f"{c.poids}" +  (f" ({c.raw_value})" if c.raw_value is not None else "")) 
+                f"{c.poids:.3f}" +  (f" ({c.raw_value:.3f})" if c.raw_value is not None else "")) 
                    for c in self.connexions], 
             do_display=do_display
         )
@@ -374,11 +536,47 @@ def rosenblatt_perceptron(num_entries: int, sorties: list[str], hidden: list[int
         reseau.neurones += [neuron]
         reseau.connexions += [Connexion(value=0, amont=None, aval=neuron)]
     
+    # neurone de sortie
+    for sv in sorties:
+        
+        sortie = Neurone(sign, sv)
+        reseau.neurones += [sortie]
+        reseau.connexions += [Connexion(None, amont=sortie, aval=None)]
+
+        for ne in en:
+            reseau.connexions += [Connexion(None, ne, sortie)]
+
+    reseau.compute_entries()
+    reseau.compute_sorties()
+
+    return reseau
+
+def werbos_hidden(num_entries: int, sorties: list[str], hidden: list[int]= []) -> Reseau:
+    """1974 :
+    Plutot que d'utiliser une fonction seuil qui occulte
+    la contribution de chaque neurone a la sortie finale,
+    on utilise une fonction derivable, typiquement sigmoide
+    ou tanh comme fonction d'activation, et emploie cette 
+    derivee avec la regle de chainage pour modifier 
+    les poids de maniere lineaire.
+    """
+
+    reseau = Reseau()
+    reseau.nb_hidden_layers = len(hidden)
+    
+    # entrees
+    en: list[Neurone] = []
+    for i in range(num_entries):
+        neuron = Neurone(act_identity, "entree " + str(i+1), seuil=0.1)
+        en.append(neuron)
+        reseau.neurones += [neuron]
+        reseau.connexions += [Connexion(value=0, amont=None, aval=neuron)]
+
     # couches intermediaires
     nen: list[Neurone] = []
     for num_inter, inter in enumerate(hidden):
         for i in range(inter):
-            neuron = Neurone(sign, f"h{num_inter}-{i}")
+            neuron = Neurone(tanh, f"h{num_inter}-{i}", d_value_f=d_tanh_from_tanh)
             nen.append(neuron)
             reseau.neurones += [neuron]
             for ne in en:
@@ -388,7 +586,7 @@ def rosenblatt_perceptron(num_entries: int, sorties: list[str], hidden: list[int
     # neurone de sortie
     for sv in sorties:
         
-        sortie = Neurone(sign, sv)
+        sortie = Neurone(tanh, sv, d_value_f=d_tanh_from_tanh)
         reseau.neurones += [sortie]
         reseau.connexions += [Connexion(None, amont=sortie, aval=None)]
 
