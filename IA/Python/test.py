@@ -27,17 +27,17 @@ class TestPittsMacCulloch(unittest.TestCase):
 
         BATCH = 10
 
-        test_or = neurones.mcculloch_pitts_neuron(entries=BATCH, seuil=1)
+        test_or = neurones.mcculloch_pitts_neuron(entries=BATCH, seuil=.9)
         
         "On test un neurone qui simule le OR, en mettant"
         "chaque dendrite a 1 successivement"
         for entree in test_or.optiques:
-            test_or.zero_entries()
+            test_or.feed_entries((0,)*BATCH)
             test_or.fire()
 
             self.assertEqual(test_or.sorties[0].value, 0)
 
-            test_or.zero_entries()
+            test_or.feed_entries((0,)*BATCH)
             entree.entrees[0].feed(1)
             test_or.fire()
 
@@ -49,9 +49,9 @@ class TestPittsMacCulloch(unittest.TestCase):
         """
         BATCH = 10
 
-        test_and = neurones.mcculloch_pitts_neuron(entries=BATCH, seuil=BATCH)
+        test_and = neurones.mcculloch_pitts_neuron(entries=BATCH, seuil=BATCH - 0.1)
         test_and.name = "mcculloch and"
-        test_and.zero_entries()
+        test_and.feed_entries((0,)*BATCH)
 
         test_and.fire()
         # graph.dessine_reseau(reseau=test_and)
@@ -75,7 +75,7 @@ class TestPittsMacCulloch(unittest.TestCase):
         inputs = [(0.,0.), (0.,1.), (1.,0.), (1.,1.)]
         outputs = [0., 1., 1., 1.]
 
-        res = neurones.mcculloch_pitts_neuron(entries=2, seuil=1)
+        res = neurones.mcculloch_pitts_neuron(entries=2, seuil=.9)
 
         for i, inp in enumerate(inputs):
             res.feed_entries(inp)
@@ -86,14 +86,13 @@ class TestPittsMacCulloch(unittest.TestCase):
         inputs = [(0.,0.), (0.,1.), (1.,0.), (1.,1.)]
         outputs = [0, 0, 0, 1]
 
-        res = neurones.mcculloch_pitts_neuron(entries=2, seuil=2)
+        res = neurones.mcculloch_pitts_neuron(entries=2, seuil=1.9)
 
         for i, inp in enumerate(inputs):
             res.feed_entries(inp)
             res.fire()
             self.assertEqual(res.sorties[0].value, outputs[i])
 
-#@unittest.skip("")
 class TestRosenblattWeights(unittest.TestCase):
     """
     Les poids negatifs de rosenblatt simulent le NOT
@@ -102,7 +101,7 @@ class TestRosenblattWeights(unittest.TestCase):
         outputs = ["0", "1"]
         inputs: dict[tuple[float, ...], int] = {(0., 0.):0, (0.,1.):1, (1.,0.): 1, (1.,1.): 1}
 
-        res = neurones.rosenblatt_perceptron(entries=2, sorties=outputs)
+        res = neurones.rosenblatt_perceptron(num_entries=2, sorties=outputs)
         res.name = "Rosen or"
         # res.draw()
         res.train(inputs, outputs, debug=False)
@@ -117,7 +116,7 @@ class TestRosenblattWeights(unittest.TestCase):
         outputs = ["0", "1"]
         inputs: dict[tuple[float, ...], int] = {(0.,0.): 0, (0.,1.): 0, (1.,0.): 0, (1.,1.): 1}
 
-        test_and = neurones.rosenblatt_perceptron(entries=2, sorties=outputs)
+        test_and = neurones.rosenblatt_perceptron(num_entries=2, sorties=outputs)
         test_and.name = "Rosen and"
         test_and.train(inputs, outputs)
 
@@ -131,11 +130,11 @@ class TestRosenblattWeights(unittest.TestCase):
         outputs = ["0", "1"]
         inputs: dict[tuple[float, ...], int] = {(0.,): 1, (1.,): 0}
 
-        test_not = neurones.rosenblatt_perceptron(entries=1, sorties=outputs)
+        test_not = neurones.rosenblatt_perceptron(num_entries=1, sorties=outputs)
         test_not.name = "Rosen not"
         test_not.train(inputs, outputs)
 
-        # graph.dessine_reseau(test_not)
+        # test_not.draw()
 
         for (inp, out) in inputs.items():
             test_not.feed_entries(inp)
@@ -143,16 +142,50 @@ class TestRosenblattWeights(unittest.TestCase):
             self.assertIsNotNone(test_not.classification())
             self.assertEqual(test_not.sorties[out].value, 1)
 
-class TestLearnPerceptron(unittest.TestCase):
-    def test_learn_and(self):
-        pass
+    def test_rosenblatt_xor_one_layer(self) -> None:
+        """
+        Pour que celui ci marche, il faut implementer une couche cachée.
+        """
+        outputs = ["0", "1"]
+        inputs: dict[tuple[float, ...], int] = {
+            (0.,0.): 0, (0.,1.): 1, (1.,0.): 1, (1.,1.): 0
+        }
+
+        test_xor = neurones.rosenblatt_perceptron(
+            num_entries=len(next(iter(inputs))), sorties=outputs)
+        test_xor.name = "Rosen xor"
+        success = test_xor.train(inputs, outputs)
+
+        self.assertFalse(success)
+
+        # test_xor.draw()
 
 class TestDeep(unittest.TestCase):
     """
     Des couches cachées permettent de gérer le XOR
     """
-    def test_rosen_xor(self) -> None:
-        pass
+    def test_rosenblatt_xor_hidden_layer(self) -> None:
+        """
+        Implementation couche cachée.
+        """
+        outputs = ["0", "1"]
+        inputs: dict[tuple[float, ...], int] = {
+            (0.,0.): 0, (0.,1.): 1, (1.,0.): 1, (1.,1.): 0
+        }
+
+        test_xor = neurones.rosenblatt_perceptron(
+            num_entries=len(next(iter(inputs))), 
+            sorties=outputs,
+            hidden = [2], # une couche de deux neurones
+        )
+
+        # test_xor.draw()
+        test_xor.name = "Rosen xor"
+        success = test_xor.train(inputs, outputs)
+
+        self.assertFalse(success)
+
+        # test_xor.draw()
 
 def main():
 

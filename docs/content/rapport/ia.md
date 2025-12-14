@@ -164,3 +164,6 @@ d'un neurone de sortie est la seule variable
 d'ajustement pour l'entree (0,0), on veut que
 le biais dj neurone de sortie "1" reste haut meme
 si trois exemples sur 4 tendent a le faire baisser.
+
+Donc on a beaucoup d'iterations superflues, mais
+ca fonctionne.
