@@ -98,11 +98,6 @@ flappy_viewer.html:
 - faire coller a viz_flappy.c
 - changer les legendes
 
-make update-model
-make viz-flappy
-make run-godot
-
-
 Bonus
 ---
 
