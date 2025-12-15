@@ -1,4 +1,4 @@
-.PHONY: test_ia_lib clean run_godot
+.PHONY: test_ia_lib clean run_godot train build-native build-debug build-godot
 
 test_ia_lib:
 	rm -f *.gv

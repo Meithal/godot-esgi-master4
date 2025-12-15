@@ -14,7 +14,7 @@ LIB_OUT = libsoftmodel.dylib
 .PHONY: all build lib run test clean viz viz_flappy run_viz run_viz_flappy
 
 all: build lib viz viz_flappy
-    
+
 # Run visualizations
 run_viz: viz
 	../Python/venv/bin/python viz_learning.py
