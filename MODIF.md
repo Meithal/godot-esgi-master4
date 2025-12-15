@@ -34,3 +34,30 @@ Visualizer Changes
 The visualizer will automatically adapt to the new network size since it uses dynamic layout, but you need to:
 - Update the input neuron names in viz_flappy.c
 - Update the legend in flappy_viewer.html to match the new 8 features
+
+Ca ne sert a rien de tout m
+
+Root.cs :
+- changer PredictDelegate
+- changer Appel à _nativePredictFunc
+
+
+train_from_demos.py :
+
+Ca ne sert a rien de tout modifier il faut juste changer
+ce qu'on passe a X.append() dans load_all()
+
+model.c :
+- changer signature de predict
+- changer   raw_in[0] = vs; etc
+
+viz_flappy.c :
+- changer FEATURE_NAMES
+
+flappy_viewer.html:
+- faire coller a viz_flappy.c
+- changer les legendes
+
+make update-model
+make viz-flappy
+make run-godot
