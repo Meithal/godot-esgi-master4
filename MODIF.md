@@ -1,3 +1,6 @@
+Voir aussi [GUIDE.md](IA/GUIDE.md)
+
+
 Manual Changes Required
 ---
 1. Root.cs - Stop recording these fields in CSV

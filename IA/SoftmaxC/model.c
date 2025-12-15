@@ -143,9 +143,11 @@ static void try_load() {
   loaded = 1;
 }
 
-int predict(double fh, double fx, double vs, double distRoof, double dx,
-            double oy, double passes, double distBottom, double distTop,
-            double tti) {
+// int predict(double fh, double fx, double vs, double distRoof, double dx,
+//             double oy, double passes, double distBottom, double distTop,
+//             double tti) {
+int predict(double vs, double distRoof, double dx, double passes,
+            double distBottom, double distTop, double tti) {
   try_load();
 
   if (!mlp_W)
@@ -166,16 +168,23 @@ int predict(double fh, double fx, double vs, double distRoof, double dx,
 
   /* Populate inputs */
   double raw_in[MAX_IN];
-  raw_in[0] = fh;
-  raw_in[1] = fx;
-  raw_in[2] = vs;
-  raw_in[3] = distRoof;
-  raw_in[4] = dx;
-  raw_in[5] = oy;
-  raw_in[6] = passes;
-  raw_in[7] = distBottom;
-  raw_in[8] = distTop;
-  raw_in[9] = tti;
+  // raw_in[0] = fh;
+  // raw_in[1] = fx;
+  // raw_in[2] = vs;
+  // raw_in[3] = distRoof;
+  // raw_in[4] = dx;
+  // raw_in[5] = oy;
+  // raw_in[6] = passes;
+  // raw_in[7] = distBottom;
+  // raw_in[8] = distTop;
+  // raw_in[9] = tti;
+  raw_in[0] = vs;
+  raw_in[1] = distRoof;
+  raw_in[2] = dx;
+  raw_in[3] = passes;
+  raw_in[4] = distBottom;
+  raw_in[5] = distTop;
+  raw_in[6] = tti;
 
   /* Zero out remainder */
   for (int i = 10; i < mlp_nin; ++i)

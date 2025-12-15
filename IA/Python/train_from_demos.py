@@ -31,6 +31,11 @@ OUT = os.path.join(HERE, "..", "SoftmaxC", "model_weights.txt")
 
 
 def parse_args():
+    """Parse command-line arguments for training configuration.
+    
+    Called by: main()
+    Returns: argparse.Namespace with training hyperparameters (epochs, lr, layers, etc.)
+    """
     p = argparse.ArgumentParser()
     p.add_argument("--data", help="Directory containing demos (default: this script folder)")
     p.add_argument("--out", help="Output native lib path (trainer will write model_weights.txt in same folder)")
@@ -43,43 +48,43 @@ def parse_args():
 
 
 def parse_csv_line(line: str, expected_cols: int) -> List[str]:
-    parts = line.split(';')
-    # If the split count matches expected, it's a standard CSV
-    if len(parts) == expected_cols:
-        return parts
+    """Parse a semicolon-separated CSV line into fields.
     
-    # Check if it looks like a "Euro" CSV (comma decimals)
-    # Euro format: 7 floats + 1 int -> 15 parts
-    # Or 8 floats + 1 int -> 17 parts
-    # General rule: N columns -> 2*N - 1 parts (if last is int) or 2*N parts
-    
-    # Heuristic: Re-assemble pairs
-    if len(parts) > expected_cols:
-        # Try to reconstruct
-        new_parts = []
-        i = 0
-        while i < len(parts):
-            # If this part + next part looks like a float (digit,digit), merge them
-            # Limitation: This is a simple heuristic assuming all floats are split
-            # The specific case we saw: fields are floats, last is int.
-            # 15 parts for 8 cols => 7 floats (14 parts) + 1 int (1 part)
-            if i + 1 < len(parts) and len(new_parts) < expected_cols - 1:
-                # Merge 0,05 -> 0.05
-                new_parts.append(f"{parts[i]}.{parts[i+1]}")
-                i += 2
-            else:
-                new_parts.append(parts[i])
-                i += 1
-        
-        if len(new_parts) == expected_cols:
-            return new_parts
-            
-    return parts
+    Called by: load_all()
+    Args:
+        line: Raw CSV line string
+        expected_cols: Expected number of columns (for validation)
+    Returns: List of string fields
+    """
+    return line.split(';')
 
 def to_float(s: str) -> float:
+    """Convert string to float, handling both comma and dot decimal separators.
+    
+    Called by: load_all()
+    Args:
+        s: String representation of a number
+    Returns: Float value
+    """
     return float(s.replace(',', '.'))
 
 def load_all() -> Tuple[List[List[float]], List[int]]:
+    """Load all demo CSV files and extract features and labels.
+    
+    Called by: main()
+    Reads all demos_*.csv files from the PATTERN directory.
+    Parses each row to extract:
+    - Original features: fh, fx, vs, dr, dx, oy, passes
+    - Derived features: dist_bottom, dist_top, tti
+    - Action label: 0 (no jump) or 1 (jump)
+    
+    Currently uses 7 features (excluding fh, fx, oy) for training.
+    
+    Returns:
+        Tuple of (X, y) where:
+        - X: List of feature vectors (each is 7 floats)
+        - y: List of action labels (0 or 1)
+    """
     X: List[List[float]] = []
     y: List[int] = []
     
@@ -127,8 +132,9 @@ def load_all() -> Tuple[List[List[float]], List[int]]:
                     dist_top = (oy + gap) - fh
                     tti = dx / speed if speed > 0 else 0
                     
-                    # Total 10 inputs: 7 original + 3 new
-                    X.append([fh, fx, vs, dr, dx, oy, passes, dist_bottom, dist_top, tti])
+                    # Total 7 inputs: vs, dr, dx, passes, dist_bottom, dist_top, tti
+                    # X.append([fh, fx, vs, dr, dx, oy, passes, dist_bottom, dist_top, tti])  # Old 10-feature version
+                    X.append([vs, dr, dx, passes, dist_bottom, dist_top, tti])
                     y.append(act)
                 except (ValueError, IndexError) as e:
                     # Re-raise ValueError for format errors, skip other parsing errors
@@ -140,6 +146,22 @@ def load_all() -> Tuple[List[List[float]], List[int]]:
 
 
 def normalize(X: List[List[float]], eps=1e-6):
+    """Normalize features using z-score normalization (mean=0, std=1).
+    
+    Called by: main()
+    Computes mean and standard deviation for each feature across all samples,
+    then normalizes each feature to have zero mean and unit variance.
+    
+    Args:
+        X: List of feature vectors
+        eps: Minimum std to avoid division by zero (default: 1e-6)
+    
+    Returns:
+        Tuple of (Xn, means, stds) where:
+        - Xn: Normalized feature vectors
+        - means: Mean of each feature (needed for C model normalization)
+        - stds: Std dev of each feature (needed for C model normalization)
+    """
     if not X:
         return X, [], []
     n = len(X[0])
@@ -163,6 +185,21 @@ def normalize(X: List[List[float]], eps=1e-6):
 
 
 def balance_data(X: List[List[float]], y: List[int], seed: int=42) -> Tuple[List[List[float]], List[int]]:
+    """Balance the dataset by oversampling the minority class (jumps).
+    
+    Called by: main()
+    Since the Flappy Bird dataset typically has many more 'no jump' (0) samples
+    than 'jump' (1) samples, this function oversamples the positive class to
+    achieve roughly equal representation.
+    
+    Args:
+        X: Feature vectors
+        y: Labels (0 or 1)
+        seed: Random seed for reproducibility
+    
+    Returns:
+        Tuple of (X_balanced, y_balanced) with equal class representation
+    """
     if not X:
         return X, y
     
@@ -172,7 +209,7 @@ def balance_data(X: List[List[float]], y: List[int], seed: int=42) -> Tuple[List
     n_pos = len(pos_indices)
     n_neg = len(neg_indices)
     
-    print(f"Data balance before: {n_pos} jumps, {n_neg} non-jumps")
+
     
     if n_pos == 0 or n_neg == 0:
         return X, y # Cannot balance
@@ -192,10 +229,32 @@ def balance_data(X: List[List[float]], y: List[int], seed: int=42) -> Tuple[List
     X_bal = [X[i] for i in all_indices]
     y_bal = [y[i] for i in all_indices]
     
-    print(f"Data balance after: {y_bal.count(1)} jumps, {y_bal.count(0)} non-jumps")
+
     return X_bal, y_bal
 
 def make_mlp(n_in: int, layer_sizes: List[int], seed: int=42):
+    """Initialize a Multi-Layer Perceptron with random weights.
+    
+    Called by: train_mlp()
+    Creates the network architecture with:
+    - Input layer: n_in neurons
+    - Hidden layers: sizes specified in layer_sizes (e.g., [16, 8])
+    - Output layer: 1 neuron (binary classification)
+    
+    Activation functions:
+    - Hidden layers: tanh
+    - Output layer: sigmoid (for binary classification)
+    
+    Args:
+        n_in: Number of input features
+        layer_sizes: List of hidden layer sizes (e.g., [16, 8] for two hidden layers)
+        seed: Random seed for weight initialization
+    
+    Returns:
+        Tuple of (W, b) where:
+        - W: List of weight matrices, W[i] connects layer i to layer i+1
+        - b: List of bias vectors, b[i] for layer i+1
+    """
     rnd = random.Random(seed)
     def randw():
         return rnd.uniform(-0.1, 0.1)
@@ -225,6 +284,18 @@ def make_mlp(n_in: int, layer_sizes: List[int], seed: int=42):
 
 
 def sigmoid(x):
+    """Sigmoid activation function with numerical stability.
+    
+    Called by: forward_sample()
+    Used for the output layer in binary classification.
+    Handles large positive/negative values to avoid overflow.
+    
+    Args:
+        x: Input value
+    
+    Returns:
+        Value in range (0, 1)
+    """
     if x >= 0:
         return 1.0 / (1.0 + math.exp(-x))
     else:
@@ -233,6 +304,25 @@ def sigmoid(x):
 
 
 def forward_sample(x, W, b):
+    """Perform forward pass through the MLP for a single sample.
+    
+    Called by: train_mlp() during training
+    Computes the network output and stores all layer activations for backpropagation.
+    
+    Activation functions:
+    - Hidden layers: tanh
+    - Output layer: sigmoid
+    
+    Args:
+        x: Input feature vector
+        W: List of weight matrices
+        b: List of bias vectors
+    
+    Returns:
+        Tuple of (p, activations) where:
+        - p: Predicted probability (0 to 1)
+        - activations: List of activation vectors for each layer (needed for backprop)
+    """
     # x: input vector (list)
     # W: list of weight matrices
     # b: list of bias vectors
@@ -280,6 +370,27 @@ def forward_sample(x, W, b):
 
 
 def train_mlp(Xn, y, layer_sizes: List[int], epochs=500, lr=0.01, l2=1e-4):
+    """Train the MLP using batch gradient descent with backpropagation.
+    
+    Called by: main()
+    Implements:
+    - Binary cross-entropy loss
+    - Class weighting to handle imbalanced data
+    - L2 regularization to prevent overfitting
+    - Gradient clipping for stability
+    - Backpropagation through time for all layers
+    
+    Args:
+        Xn: Normalized feature vectors
+        y: Labels (0 or 1)
+        layer_sizes: Hidden layer sizes (e.g., [16, 8])
+        epochs: Number of training iterations
+        lr: Learning rate
+        l2: L2 regularization coefficient
+    
+    Returns:
+        Tuple of (W, b) - trained weights and biases
+    """
     n_in = len(Xn[0]) if Xn else 0
     if not Xn or not y or len(Xn) != len(y):
         print(f"ERROR: Data mismatch: X={len(Xn)}, y={len(y)}")
@@ -295,8 +406,7 @@ def train_mlp(Xn, y, layer_sizes: List[int], epochs=500, lr=0.01, l2=1e-4):
     weight_pos = neg_count / pos_count if pos_count > 0 else 1.0
     weight_neg = 1.0
     
-    print(f"Training on {m} samples: {pos_count} positive, {neg_count} negative")
-    print(f"Class balance: weight_pos={weight_pos:.2f}, weight_neg={weight_neg:.2f}")
+
     
     for epoch in range(epochs):
         # Accumulate gradients
@@ -407,6 +517,24 @@ def train_mlp(Xn, y, layer_sizes: List[int], epochs=500, lr=0.01, l2=1e-4):
 
 
 def write_model(W, b, means, stds, outpath):
+    """Write trained model to text file in format readable by C model loader.
+    
+    Called by: main()
+    Writes to ../SoftmaxC/model_weights.txt in the following format:
+    - Line 1: MLP <n_in> <n_layers> <layer_sizes...>
+    - Line 2: means (space-separated)
+    - Line 3: stds (space-separated)
+    - Then for each layer: weight matrix rows, then bias vector
+    
+    The C model (model.c) reads this file to perform inference in Godot.
+    
+    Args:
+        W: List of weight matrices
+        b: List of bias vectors
+        means: Feature means (for normalization)
+        stds: Feature standard deviations (for normalization)
+        outpath: Output file path
+    """
     d = os.path.dirname(outpath)
     if not os.path.exists(d): os.makedirs(d)
     
@@ -433,6 +561,19 @@ def write_model(W, b, means, stds, outpath):
 
 
 def main():
+    """Main training pipeline.
+    
+    Orchestrates the complete training workflow:
+    1. Load CSV demo files
+    2. Balance the dataset (oversample jumps)
+    3. Normalize features
+    4. Train MLP with backpropagation
+    5. Write model weights to file
+    6. Optionally build native C library
+    
+    The trained model is used by the C inference code (model.c) in Godot
+    to enable the "Play like me" AI mode.
+    """
     args = parse_args()
     if args.data:
         data_dir = os.path.abspath(args.data)
@@ -455,9 +596,7 @@ def main():
     
     # Normalize
     Xn, means, stds = normalize(X)
-    print("Data shapes:", len(Xn), "samples x", len(Xn[0]), "features")
-    print("means:", means)
-    print("stds:", stds)
+    print(f"Training on {len(Xn)} samples with {len(Xn[0])} features")
     
     # Argparse default was 0.
     W, b = train_mlp(Xn, y, args.layers, epochs=args.epochs, lr=args.lr, l2=args.l2)

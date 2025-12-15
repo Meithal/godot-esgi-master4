@@ -45,7 +45,8 @@ public partial class Root : Node2D
     private IntPtr _nativeLibHandle = IntPtr.Zero;
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     // signature now includes 10 arguments
-    private delegate int PredictDelegate(double flappyHeight, double flappyX, double verticalSpeed, double distToRoof, double obs_dx, double obs_y, double passes, double distBottom, double distTop, double tti);
+    // private delegate int PredictDelegate(double flappyHeight, double flappyX, double verticalSpeed, double distToRoof, double obs_dx, double obs_y, double passes, double distBottom, double distTop, double tti);
+    private delegate int PredictDelegate(double verticalSpeed, double distToRoof, double obs_dx, double passes, double distBottom, double distTop, double tti);
     private PredictDelegate _nativePredictFunc = null;
 
     private bool LoadNativeLibrary()
@@ -298,7 +299,9 @@ public partial class Root : Node2D
                     int passesArg = 0;
                     try { passesArg = _core.GetObstaclesPasses(); } catch { passesArg = 0; }
                     // Pass new arguments: distBottom, distTop, tti
-                    pred = _nativePredictFunc(_output.FlappyHeight, _output.FlappyX, verticalSpeed, distToRoof, nearest_dx, nearest_y, (double)passesArg, distBottom, distTop, tti);
+                    // pred = _nativePredictFunc(_output.FlappyHeight, _output.FlappyX, verticalSpeed, distToRoof, nearest_dx, nearest_y, (double)passesArg, distBottom, distTop, tti);
+                    // Call with 7 features: vs, dr, dx, passes, distBottom, distTop, tti
+                    pred = _nativePredictFunc(verticalSpeed, distToRoof, nearest_dx, (double)passesArg, distBottom, distTop, tti);
                     humanJump = pred == 1;
                     // throttle logging to avoid spamming output
                     try

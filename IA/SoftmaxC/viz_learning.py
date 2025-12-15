@@ -26,13 +26,20 @@ def run_viz_test(lr=0.5, epochs=2000, seed=42, snapshot_interval=50, mode='xor')
         cmd = [binary, str(lr), str(epochs), str(seed), str(snapshot_interval), 'viz_data.txt']
     
     # Run and capture output
-    result = subprocess.run(cmd, capture_output=True, text=True)
-    if result.returncode != 0:
+    # Use PIPE and communicate() to handle large output properly
+    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    stdout, stderr = process.communicate()
+    
+    if process.returncode != 0:
         print(f"Error running {binary}:")
-        print(result.stderr)
+        print(stderr)
         sys.exit(1)
+    
+    # Print stderr (contains progress messages) to show what happened
+    if stderr:
+        print(stderr, file=sys.stderr)
         
-    return result.stdout
+    return stdout
 
 def generate_advanced_html(json_output, template_path, output_path='network_learning.html'):
     try:

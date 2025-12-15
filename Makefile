@@ -45,3 +45,6 @@ build-godot:
 GODOT_BIN ?= /Applications/Godot_mono.app/Contents/MacOS/Godot
 run-godot: build-godot
 	$(GODOT_BIN) --path ./godot
+
+viz-flappy:
+	$(MAKE) -C IA/SoftmaxC run_viz_flappy
