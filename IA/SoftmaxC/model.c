@@ -168,6 +168,7 @@ int predict(double vs, double distRoof, double dx, double passes,
 
   /* Populate inputs */
   double raw_in[MAX_IN];
+  // on ne considere plus fh, fx et oy
   // raw_in[0] = fh;
   // raw_in[1] = fx;
   // raw_in[2] = vs;
