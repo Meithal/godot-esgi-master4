@@ -1,3 +1,34 @@
+
+Resumé
+---
+
+Root.cs :
+
+- changer PredictDelegate
+- changer Appel à _nativePredictFunc
+
+train_from_demos.py :
+
+Ca ne sert a rien de tout modifier il faut juste changer
+ce qu'on passe a X.append() dans load_all()
+
+model.c :
+
+- changer signature de predict
+- changer   raw_in[0] = vs; etc
+
+viz_flappy.c :
+
+- changer FEATURE_NAMES
+
+flappy_viewer.html:
+
+- faire coller a viz_flappy.c
+- changer les legendes
+
+make update-model
+make viz-flappy
+
 Voir aussi [GUIDE.md](IA/GUIDE.md)
 
 
@@ -35,33 +66,4 @@ The visualizer will automatically adapt to the new network size since it uses dy
 - Update the input neuron names in viz_flappy.c
 - Update the legend in flappy_viewer.html to match the new 8 features
 
-Resumé
----
-
-Root.cs :
-
-- changer PredictDelegate
-- changer Appel à _nativePredictFunc
-
-train_from_demos.py :
-
-Ca ne sert a rien de tout modifier il faut juste changer
-ce qu'on passe a X.append() dans load_all()
-
-model.c :
-
-- changer signature de predict
-- changer   raw_in[0] = vs; etc
-
-viz_flappy.c :
-
-- changer FEATURE_NAMES
-
-flappy_viewer.html:
-
-- faire coller a viz_flappy.c
-- changer les legendes
-
-make update-model
-make viz-flappy
 make run-godot
