@@ -9,6 +9,9 @@ Fonctionne probablement mieux depuis un WSL ou tout environnement POSIX
 Creer un venv (testé avec python 3.10) dans le répertoire ./IA/Python
 puis depuis celui-ci lancer `pip install -r requirements.txt`.
 
+Run
+---
+
 Pour générer un dataset
 
 ```bash
