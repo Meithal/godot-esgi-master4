@@ -36,7 +36,7 @@ def parse_args():
     p.add_argument("--out", help="Output native lib path (trainer will write model_weights.txt in same folder)")
     p.add_argument("--epochs", type=int, default=2000)
     p.add_argument("--lr", type=float, default=0.02)
-    p.add_argument("--layers", type=int, nargs='+', default=[10], help="List of hidden layer sizes (e.g. 10 5)")
+    p.add_argument("--layers", type=int, nargs='+', default=[16, 8], help="List of hidden layer sizes (e.g. 10 5)")
     p.add_argument("--l2", type=float, default=1e-5)
     p.add_argument("--seed", type=int, default=42)
     return p.parse_args()
@@ -87,8 +87,17 @@ def load_all() -> Tuple[List[List[float]], List[int]]:
         print(f"Loading {path}...")
         with open(path, 'r') as f:
             header_line = f.readline().lower()
-            has_passes = 'passes' in header_line
-            expected_fields = 9 if has_passes else 8
+            header_fields = [f.strip() for f in header_line.split(';')]
+            expected_fields = 9  # time + 7 features + action
+            
+            # Validate header column count
+            if len(header_fields) != expected_fields:
+                raise ValueError(
+                    f"ERROR: CSV format mismatch in {path}!\n"
+                    f"Expected {expected_fields} columns, found {len(header_fields)}.\n"
+                    f"Header: {header_line.strip()}\n"
+                    f"Please delete outdated CSV files and generate new training data."
+                )
             
             for line in f:
                 line = line.strip()
@@ -98,21 +107,33 @@ def load_all() -> Tuple[List[List[float]], List[int]]:
                 parts = parse_csv_line(line, expected_fields)
                 
                 try:
-                    if has_passes:
-                        if len(parts) < 9:
-                            continue
-                        fh = to_float(parts[1]); fx = to_float(parts[2]); vs = to_float(parts[3])
-                        dr = to_float(parts[4]); dx = to_float(parts[5]); oy = to_float(parts[6]); passes = to_float(parts[7]); act = int(parts[8])
-                        X.append([fh, fx, vs, dr, dx, oy, passes])
-                        y.append(act)
-                    else:
-                        if len(parts) < 8:
-                            continue
-                        fh = to_float(parts[1]); fx = to_float(parts[2]); vs = to_float(parts[3])
-                        dr = to_float(parts[4]); dx = to_float(parts[5]); oy = to_float(parts[6]); act = int(parts[7])
-                        X.append([fh, fx, vs, dr, dx, oy])
-                        y.append(act)
+                    if len(parts) < expected_fields:
+                        raise ValueError(
+                            f"ERROR: Data row has {len(parts)} columns, expected {expected_fields}.\n"
+                            f"File: {path}\n"
+                            f"Line: {line[:100]}...\n"
+                            f"Please delete outdated CSV files."
+                        )
+                    
+                    fh = to_float(parts[1]); fx = to_float(parts[2]); vs = to_float(parts[3])
+                    dr = to_float(parts[4]); dx = to_float(parts[5]); oy = to_float(parts[6]); passes = to_float(parts[7]); act = int(parts[8])
+                    
+                    # Derived features
+                    # Gap ~ 30, Speed ~ 40 (hardcoded here based on Godot project)
+                    gap = 30.0
+                    speed = 40.0
+                    
+                    dist_bottom = fh - oy
+                    dist_top = (oy + gap) - fh
+                    tti = dx / speed if speed > 0 else 0
+                    
+                    # Total 10 inputs: 7 original + 3 new
+                    X.append([fh, fx, vs, dr, dx, oy, passes, dist_bottom, dist_top, tti])
+                    y.append(act)
                 except (ValueError, IndexError) as e:
+                    # Re-raise ValueError for format errors, skip other parsing errors
+                    if isinstance(e, ValueError) and "ERROR:" in str(e):
+                        raise
                     pass
     
     return X, y

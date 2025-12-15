@@ -144,7 +144,8 @@ static void try_load() {
 }
 
 int predict(double fh, double fx, double vs, double distRoof, double dx,
-            double oy, double passes) {
+            double oy, double passes, double distBottom, double distTop,
+            double tti) {
   try_load();
 
   if (!mlp_W)
@@ -171,10 +172,13 @@ int predict(double fh, double fx, double vs, double distRoof, double dx,
   raw_in[3] = distRoof;
   raw_in[4] = dx;
   raw_in[5] = oy;
-  if (mlp_nin >= 7)
-    raw_in[6] = passes;
+  raw_in[6] = passes;
+  raw_in[7] = distBottom;
+  raw_in[8] = distTop;
+  raw_in[9] = tti;
+
   /* Zero out remainder */
-  for (int i = 7; i < mlp_nin; ++i)
+  for (int i = 10; i < mlp_nin; ++i)
     raw_in[i] = 0.0;
 
   /* Normalize */

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>XOR Learning Visualization</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #1a1a1a;
+            color: #eee;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        #canvas-container {
+            flex-grow: 1;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        canvas {
+            background: #252525;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        #controls {
+            padding: 20px;
+            background: #333;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            border-top: 1px solid #444;
+        }
+
+        #scrubber {
+            flex-grow: 1;
+            cursor: pointer;
+        }
+
+        .stat-box {
+            background: #444;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-weight: bold;
+            min-width: 150px;
+            text-align: center;
+        }
+
+        .legend {
+            display: flex;
+            gap: 10px;
+            font-size: 12px;
+            color: #aaa;
+            margin-left: 20px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="canvas-container">
+        <canvas id="netCanvas"></canvas>
+    </div>
+    <div id="controls">
+        <button id="btnPlay">Play</button>
+        <input type="range" id="scrubber" min="0" max="100" value="0">
+        <div class="stat-box" id="infoEpoch">Epoch: 0</div>
+        <div class="stat-box" id="infoLoss">Loss: 0.000</div>
+        <div class="stat-box" id="infoAcc">Acc: 0%</div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="dot" style="background:cyan"></div>+Val
+            </div>
+            <div class="legend-item">
+                <div class="dot" style="background:magenta"></div>-Val
+            </div>
+            <div class="legend-item">
+                <div class="dot" style="background:#0f0"></div>+W
+            </div>
+            <div class="legend-item">
+                <div class="dot" style="background:#f00"></div>-W
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data injected by python
+        const snapshots = [{"epoch": 0, "loss": 0.6964, "accuracy": 0.25, "neurons": [{"name": "x1", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "x2", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "h1", "bias": -0.0074, "value": -0.4423, "delta": 0.2093}, {"name": "h2", "bias": -0.0029, "value": -0.0013, "delta": 0.1372}, {"name": "o1", "bias": 0.0164, "value": 0.0551, "delta": -0.434}, {"name": "o2", "bias": -0.0164, "value": -0.2105, "delta": 0.434}], "connections": [{"from": "x1", "to": "h1", "weight": -0.4934}, {"from": "x2", "to": "h1", "weight": 0.037}, {"from": "x1", "to": "h2", "weight": 0.2389}, {"from": "x2", "to": "h2", "weight": -0.2346}, {"from": "h1", "to": "o1", "weight": -0.1176}, {"from": "h2", "to": "o1", "weight": -0.3047}, {"from": "h1", "to": "o2", "weight": 0.4697}, {"from": "h2", "to": "o2", "weight": 0.0134}]}, {"epoch": 50, "loss": 0.6876, "accuracy": 0.5, "neurons": [{"name": "x1", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "x2", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "h1", "bias": 0.172, "value": -0.4203, "delta": 0.2129}, {"name": "h2", "bias": 0.1184, "value": -0.1315, "delta": 0.2103}, {"name": "o1", "bias": 0.0943, "value": -0.0023, "delta": -0.4738}, {"name": "o2", "bias": -0.0943, "value": -0.1074, "delta": 0.4738}], "connections": [{"from": "x1", "to": "h1", "weight": -0.5626}, {"from": "x2", "to": "h1", "weight": 0.2817}, {"from": "x1", "to": "h2", "weight": 0.2923}, {"from": "x2", "to": "h2", "weight": -0.3108}, {"from": "h1", "to": "o1", "weight": -0.0987}, {"from": "h2", "to": "o1", "weight": -0.3738}, {"from": "h1", "to": "o2", "weight": 0.4508}, {"from": "h2", "to": "o2", "weight": 0.0824}]}, {"epoch": 100, "loss": 0.5551, "accuracy": 0.75, "neurons": [{"name": "x1", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "x2", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "h1", "bias": 0.6612, "value": -0.6896, "delta": 0.2591}, {"name": "h2", "bias": 0.4159, "value": -0.4482, "delta": 0.3346}, {"name": "o1", "bias": 0.4625, "value": 0.2228, "delta": -0.3641}, {"name": "o2", "bias": -0.4625, "value": -0.335, "delta": 0.3641}], "connections": [{"from": "x1", "to": "h1", "weight": -1.2311}, {"from": "x2", "to": "h1", "weight": 1.0362}, {"from": "x1", "to": "h2", "weight": 0.7607}, {"from": "x2", "to": "h2", "weight": -0.839}, {"from": "h1", "to": "o1", "weight": -0.5207}, {"from": "h2", "to": "o1", "weight": -0.7394}, {"from": "h1", "to": "o2", "weight": 0.8728}, {"from": "h2", "to": "o2", "weight": 0.448}]}, {"epoch": 150, "loss": 0.1192, "accuracy": 1.0, "neurons": [{"name": "x1", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "x2", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "h1", "bias": 1.0533, "value": -0.8138, "delta": 0.0848}, {"name": "h2", "bias": 0.9215, "value": -0.7667, "delta": 0.1037}, {"name": "o1", "bias": 1.3174, "value": 1.2018, "delta": -0.0782}, {"name": "o2", "bias": -1.3174, "value": -1.2649, "delta": 0.0782}], "connections": [{"from": "x1", "to": "h1", "weight": -2.1729}, {"from": "x2", "to": "h1", "weight": 2.0845}, {"from": "x1", "to": "h2", "weight": 1.888}, {"from": "x2", "to": "h2", "weight": -1.9845}, {"from": "h1", "to": "o1", "weight": -1.4405}, {"from": "h2", "to": "o1", "weight": -1.7675}, {"from": "h1", "to": "o2", "weight": 1.7926}, {"from": "h2", "to": "o2", "weight": 1.4761}]}, {"epoch": 200, "loss": 0.0482, "accuracy": 1.0, "neurons": [{"name": "x1", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "x2", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "h1", "bias": 1.1883, "value": -0.853, "delta": 0.0347}, {"name": "h2", "bias": 1.0968, "value": -0.8307, "delta": 0.0398}, {"name": "o1", "bias": 1.7325, "value": 1.6873, "delta": -0.0313}, {"name": "o2", "bias": -1.7325, "value": -1.7456, "delta": 0.0313}], "connections": [{"from": "x1", "to": "h1", "weight": -2.4965}, {"from": "x2", "to": "h1", "weight": 2.4158}, {"from": "x1", "to": "h2", "weight": 2.2668}, {"from": "x2", "to": "h2", "weight": -2.3625}, {"from": "h1", "to": "o1", "weight": -1.8688}, {"from": "h2", "to": "o1", "weight": -2.203}, {"from": "h1", "to": "o2", "weight": 2.2209}, {"from": "h2", "to": "o2", "weight": 1.9116}]}, {"epoch": 250, "loss": 0.0289, "accuracy": 1.0, "neurons": [{"name": "x1", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "x2", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "h1", "bias": 1.2586, "value": -0.8712, "delta": 0.0205}, {"name": "h2", "bias": 1.1819, "value": -0.8555, "delta": 0.0229}, {"name": "o1", "bias": 1.9661, "value": 1.9531, "delta": -0.0186}, {"name": "o2", "bias": -1.9661, "value": -2.0106, "delta": 0.0186}], "connections": [{"from": "x1", "to": "h1", "weight": -2.6586}, {"from": "x2", "to": "h1", "weight": 2.578}, {"from": "x1", "to": "h2", "weight": 2.4494}, {"from": "x2", "to": "h2", "weight": -2.545}, {"from": "h1", "to": "o1", "weight": -2.106}, {"from": "h2", "to": "o1", "weight": -2.44}, {"from": "h1", "to": "o2", "weight": 2.4581}, {"from": "h2", "to": "o2", "weight": 2.1486}]}, {"epoch": 300, "loss": 0.0204, "accuracy": 1.0, "neurons": [{"name": "x1", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "x2", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "h1", "bias": 1.3046, "value": -0.8821, "delta": 0.0142}, {"name": "h2", "bias": 1.2361, "value": -0.8694, "delta": 0.0157}, {"name": "o1", "bias": 2.1263, "value": 2.133, "delta": -0.0131}, {"name": "o2", "bias": -2.1263, "value": -2.1902, "delta": 0.0131}], "connections": [{"from": "x1", "to": "h1", "weight": -2.763}, {"from": "x2", "to": "h1", "weight": 2.6817}, {"from": "x1", "to": "h2", "weight": 2.5651}, {"from": "x2", "to": "h2", "weight": -2.6607}, {"from": "h1", "to": "o1", "weight": -2.2675}, {"from": "h2", "to": "o1", "weight": -2.6008}, {"from": "h1", "to": "o2", "weight": 2.6196}, {"from": "h2", "to": "o2", "weight": 2.3094}]}, {"epoch": 350, "loss": 0.0157, "accuracy": 1.0, "neurons": [{"name": "x1", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "x2", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "h1", "bias": 1.3384, "value": -0.8896, "delta": 0.0107}, {"name": "h2", "bias": 1.2752, "value": -0.8788, "delta": 0.0117}, {"name": "o1", "bias": 2.2478, "value": 2.2681, "delta": -0.01}, {"name": "o2", "bias": -2.2478, "value": -2.3253, "delta": 0.01}], "connections": [{"from": "x1", "to": "h1", "weight": -2.8389}, {"from": "x2", "to": "h1", "weight": 2.7568}, {"from": "x1", "to": "h2", "weight": 2.6482}, {"from": "x2", "to": "h2", "weight": -2.744}, {"from": "h1", "to": "o1", "weight": -2.3894}, {"from": "h2", "to": "o1", "weight": -2.722}, {"from": "h1", "to": "o2", "weight": 2.7415}, {"from": "h2", "to": "o2", "weight": 2.4306}]}, {"epoch": 400, "loss": 0.0127, "accuracy": 1.0, "neurons": [{"name": "x1", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "x2", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "h1", "bias": 1.3649, "value": -0.8951, "delta": 0.0086}, {"name": "h2", "bias": 1.3056, "value": -0.8856, "delta": 0.0093}, {"name": "o1", "bias": 2.3454, "value": 2.376, "delta": -0.0081}, {"name": "o2", "bias": -2.3454, "value": -2.4332, "delta": 0.0081}], "connections": [{"from": "x1", "to": "h1", "weight": -2.898}, {"from": "x2", "to": "h1", "weight": 2.8152}, {"from": "x1", "to": "h2", "weight": 2.7126}, {"from": "x2", "to": "h2", "weight": -2.8084}, {"from": "h1", "to": "o1", "weight": -2.4871}, {"from": "h2", "to": "o1", "weight": -2.8191}, {"from": "h1", "to": "o2", "weight": 2.8392}, {"from": "h2", "to": "o2", "weight": 2.5277}]}, {"epoch": 450, "loss": 0.0106, "accuracy": 1.0, "neurons": [{"name": "x1", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "x2", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "h1", "bias": 1.3866, "value": -0.8995, "delta": 0.0071}, {"name": "h2", "bias": 1.3302, "value": -0.8908, "delta": 0.0077}, {"name": "o1", "bias": 2.427, "value": 2.4657, "delta": -0.0068}, {"name": "o2", "bias": -2.427, "value": -2.5229, "delta": 0.0068}], "connections": [{"from": "x1", "to": "h1", "weight": -2.9462}, {"from": "x2", "to": "h1", "weight": 2.8627}, {"from": "x1", "to": "h2", "weight": 2.7647}, {"from": "x2", "to": "h2", "weight": -2.8607}, {"from": "h1", "to": "o1", "weight": -2.5685}, {"from": "h2", "to": "o1", "weight": -2.9001}, {"from": "h1", "to": "o2", "weight": 2.9206}, {"from": "h2", "to": "o2", "weight": 2.6087}]}, {"epoch": 500, "loss": 0.0092, "accuracy": 1.0, "neurons": [{"name": "x1", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "x2", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "h1", "bias": 1.4049, "value": -0.9031, "delta": 0.006}, {"name": "h2", "bias": 1.3509, "value": -0.895, "delta": 0.0065}, {"name": "o1", "bias": 2.497, "value": 2.5424, "delta": -0.0058}, {"name": "o2", "bias": -2.497, "value": -2.5996, "delta": 0.0058}], "connections": [{"from": "x1", "to": "h1", "weight": -2.9867}, {"from": "x2", "to": "h1", "weight": 2.9026}, {"from": "x1", "to": "h2", "weight": 2.8083}, {"from": "x2", "to": "h2", "weight": -2.9045}, {"from": "h1", "to": "o1", "weight": -2.6383}, {"from": "h2", "to": "o1", "weight": -2.9695}, {"from": "h1", "to": "o2", "weight": 2.9904}, {"from": "h2", "to": "o2", "weight": 2.6781}]}, {"epoch": 550, "loss": 0.008, "accuracy": 1.0, "neurons": [{"name": "x1", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "x2", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "h1", "bias": 1.4207, "value": -0.9061, "delta": 0.0052}, {"name": "h2", "bias": 1.3686, "value": -0.8986, "delta": 0.0056}, {"name": "o1", "bias": 2.5583, "value": 2.6093, "delta": -0.0051}, {"name": "o2", "bias": -2.5583, "value": -2.6665, "delta": 0.0051}], "connections": [{"from": "x1", "to": "h1", "weight": -3.0215}, {"from": "x2", "to": "h1", "weight": 2.9369}, {"from": "x1", "to": "h2", "weight": 2.8457}, {"from": "x2", "to": "h2", "weight": -2.9421}, {"from": "h1", "to": "o1", "weight": -2.6993}, {"from": "h2", "to": "o1", "weight": -3.0301}, {"from": "h1", "to": "o2", "weight": 3.0514}, {"from": "h2", "to": "o2", "weight": 2.7387}]}, {"epoch": 600, "loss": 0.0071, "accuracy": 1.0, "neurons": [{"name": "x1", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "x2", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "h1", "bias": 1.4346, "value": -0.9086, "delta": 0.0046}, {"name": "h2", "bias": 1.3842, "value": -0.9016, "delta": 0.005}, {"name": "o1", "bias": 2.6127, "value": 2.6686, "delta": -0.0045}, {"name": "o2", "bias": -2.6127, "value": -2.7259, "delta": 0.0045}], "connections": [{"from": "x1", "to": "h1", "weight": -3.052}, {"from": "x2", "to": "h1", "weight": 2.9669}, {"from": "x1", "to": "h2", "weight": 2.8783}, {"from": "x2", "to": "h2", "weight": -2.9749}, {"from": "h1", "to": "o1", "weight": -2.7535}, {"from": "h2", "to": "o1", "weight": -3.084}, {"from": "h1", "to": "o2", "weight": 3.1056}, {"from": "h2", "to": "o2", "weight": 2.7926}]}, {"epoch": 650, "loss": 0.0064, "accuracy": 1.0, "neurons": [{"name": "x1", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "x2", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "h1", "bias": 1.4469, "value": -0.9108, "delta": 0.0041}, {"name": "h2", "bias": 1.3979, "value": -0.9041, "delta": 0.0044}, {"name": "o1", "bias": 2.6618, "value": 2.7219, "delta": -0.0041}, {"name": "o2", "bias": -2.6618, "value": -2.7791, "delta": 0.0041}], "connections": [{"from": "x1", "to": "h1", "weight": -3.0791}, {"from": "x2", "to": "h1", "weight": 2.9935}, {"from": "x1", "to": "h2", "weight": 2.9072}, {"from": "x2", "to": "h2", "weight": -3.004}, {"from": "h1", "to": "o1", "weight": -2.8022}, {"from": "h2", "to": "o1", "weight": -3.1325}, {"from": "h1", "to": "o2", "weight": 3.1543}, {"from": "h2", "to": "o2", "weight": 2.8411}]}, {"epoch": 700, "loss": 0.0058, "accuracy": 1.0, "neurons": [{"name": "x1", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "x2", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "h1", "bias": 1.4581, "value": -0.9128, "delta": 0.0037}, {"name": "h2", "bias": 1.4103, "value": -0.9064, "delta": 0.004}, {"name": "o1", "bias": 2.7064, "value": 2.7702, "delta": -0.0037}, {"name": "o2", "bias": -2.7064, "value": -2.8275, "delta": 0.0037}], "connections": [{"from": "x1", "to": "h1", "weight": -3.1034}, {"from": "x2", "to": "h1", "weight": 3.0174}, {"from": "x1", "to": "h2", "weight": 2.9332}, {"from": "x2", "to": "h2", "weight": -3.0301}, {"from": "h1", "to": "o1", "weight": -2.8464}, {"from": "h2", "to": "o1", "weight": -3.1765}, {"from": "h1", "to": "o2", "weight": 3.1985}, {"from": "h2", "to": "o2", "weight": 2.8851}]}, {"epoch": 750, "loss": 0.0054, "accuracy": 1.0, "neurons": [{"name": "x1", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "x2", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "h1", "bias": 1.4682, "value": -0.9145, "delta": 0.0034}, {"name": "h2", "bias": 1.4215, "value": -0.9084, "delta": 0.0036}, {"name": "o1", "bias": 2.7472, "value": 2.8144, "delta": -0.0034}, {"name": "o2", "bias": -2.7472, "value": -2.8717, "delta": 0.0034}], "connections": [{"from": "x1", "to": "h1", "weight": -3.1255}, {"from": "x2", "to": "h1", "weight": 3.0391}, {"from": "x1", "to": "h2", "weight": 2.9566}, {"from": "x2", "to": "h2", "weight": -3.0537}, {"from": "h1", "to": "o1", "weight": -2.887}, {"from": "h2", "to": "o1", "weight": -3.2168}, {"from": "h1", "to": "o2", "weight": 3.2391}, {"from": "h2", "to": "o2", "weight": 2.9254}]}, {"epoch": 800, "loss": 0.0049, "accuracy": 1.0, "neurons": [{"name": "x1", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "x2", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "h1", "bias": 1.4774, "value": -0.9161, "delta": 0.0031}, {"name": "h2", "bias": 1.4317, "value": -0.9102, "delta": 0.0033}, {"name": "o1", "bias": 2.7849, "value": 2.8552, "delta": -0.0031}, {"name": "o2", "bias": -2.7849, "value": -2.9125, "delta": 0.0031}], "connections": [{"from": "x1", "to": "h1", "weight": -3.1456}, {"from": "x2", "to": "h1", "weight": 3.0589}, {"from": "x1", "to": "h2", "weight": 2.978}, {"from": "x2", "to": "h2", "weight": -3.0753}, {"from": "h1", "to": "o1", "weight": -2.9244}, {"from": "h2", "to": "o1", "weight": -3.254}, {"from": "h1", "to": "o2", "weight": 3.2764}, {"from": "h2", "to": "o2", "weight": 2.9626}]}, {"epoch": 850, "loss": 0.0046, "accuracy": 1.0, "neurons": [{"name": "x1", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "x2", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "h1", "bias": 1.4859, "value": -0.9175, "delta": 0.0029}, {"name": "h2", "bias": 1.4411, "value": -0.9118, "delta": 0.0031}, {"name": "o1", "bias": 2.8199, "value": 2.8929, "delta": -0.0029}, {"name": "o2", "bias": -2.8199, "value": -2.9503, "delta": 0.0029}], "connections": [{"from": "x1", "to": "h1", "weight": -3.1642}, {"from": "x2", "to": "h1", "weight": 3.0771}, {"from": "x1", "to": "h2", "weight": 2.9977}, {"from": "x2", "to": "h2", "weight": -3.0951}, {"from": "h1", "to": "o1", "weight": -2.959}, {"from": "h2", "to": "o1", "weight": -3.2886}, {"from": "h1", "to": "o2", "weight": 3.3111}, {"from": "h2", "to": "o2", "weight": 2.9972}]}, {"epoch": 900, "loss": 0.0043, "accuracy": 1.0, "neurons": [{"name": "x1", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "x2", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "h1", "bias": 1.4938, "value": -0.9188, "delta": 0.0027}, {"name": "h2", "bias": 1.4497, "value": -0.9133, "delta": 0.0028}, {"name": "o1", "bias": 2.8526, "value": 2.9281, "delta": -0.0027}, {"name": "o2", "bias": -2.8526, "value": -2.9855, "delta": 0.0027}], "connections": [{"from": "x1", "to": "h1", "weight": -3.1814}, {"from": "x2", "to": "h1", "weight": 3.094}, {"from": "x1", "to": "h2", "weight": 3.0159}, {"from": "x2", "to": "h2", "weight": -3.1134}, {"from": "h1", "to": "o1", "weight": -2.9914}, {"from": "h2", "to": "o1", "weight": -3.3208}, {"from": "h1", "to": "o2", "weight": 3.3435}, {"from": "h2", "to": "o2", "weight": 3.0294}]}, {"epoch": 950, "loss": 0.004, "accuracy": 1.0, "neurons": [{"name": "x1", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "x2", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "h1", "bias": 1.5012, "value": -0.9199, "delta": 0.0025}, {"name": "h2", "bias": 1.4578, "value": -0.9147, "delta": 0.0026}, {"name": "o1", "bias": 2.8832, "value": 2.9611, "delta": -0.0025}, {"name": "o2", "bias": -2.8832, "value": -3.0185, "delta": 0.0025}], "connections": [{"from": "x1", "to": "h1", "weight": -3.1973}, {"from": "x2", "to": "h1", "weight": 3.1097}, {"from": "x1", "to": "h2", "weight": 3.0328}, {"from": "x2", "to": "h2", "weight": -3.1304}, {"from": "h1", "to": "o1", "weight": -3.0217}, {"from": "h2", "to": "o1", "weight": -3.351}, {"from": "h1", "to": "o2", "weight": 3.3738}, {"from": "h2", "to": "o2", "weight": 3.0596}]}, {"epoch": 1000, "loss": 0.0038, "accuracy": 1.0, "neurons": [{"name": "x1", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "x2", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "h1", "bias": 1.508, "value": -0.921, "delta": 0.0023}, {"name": "h2", "bias": 1.4654, "value": -0.9159, "delta": 0.0025}, {"name": "o1", "bias": 2.912, "value": 2.992, "delta": -0.0024}, {"name": "o2", "bias": -2.912, "value": -3.0494, "delta": 0.0024}], "connections": [{"from": "x1", "to": "h1", "weight": -3.2122}, {"from": "x2", "to": "h1", "weight": 3.1243}, {"from": "x1", "to": "h2", "weight": 3.0485}, {"from": "x2", "to": "h2", "weight": -3.1463}, {"from": "h1", "to": "o1", "weight": -3.0503}, {"from": "h2", "to": "o1", "weight": -3.3794}, {"from": "h1", "to": "o2", "weight": 3.4024}, {"from": "h2", "to": "o2", "weight": 3.088}]}, {"epoch": 1050, "loss": 0.0036, "accuracy": 1.0, "neurons": [{"name": "x1", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "x2", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "h1", "bias": 1.5145, "value": -0.922, "delta": 0.0022}, {"name": "h2", "bias": 1.4724, "value": -0.9171, "delta": 0.0023}, {"name": "o1", "bias": 2.9393, "value": 3.0212, "delta": -0.0022}, {"name": "o2", "bias": -2.9393, "value": -3.0787, "delta": 0.0022}], "connections": [{"from": "x1", "to": "h1", "weight": -3.2262}, {"from": "x2", "to": "h1", "weight": 3.1381}, {"from": "x1", "to": "h2", "weight": 3.0633}, {"from": "x2", "to": "h2", "weight": -3.1612}, {"from": "h1", "to": "o1", "weight": -3.0772}, {"from": "h2", "to": "o1", "weight": -3.4062}, {"from": "h1", "to": "o2", "weight": 3.4293}, {"from": "h2", "to": "o2", "weight": 3.1148}]}, {"epoch": 1100, "loss": 0.0034, "accuracy": 1.0, "neurons": [{"name": "x1", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "x2", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "h1", "bias": 1.5206, "value": -0.923, "delta": 0.0021}, {"name": "h2", "bias": 1.4791, "value": -0.9181, "delta": 0.0022}, {"name": "o1", "bias": 2.965, "value": 3.0489, "delta": -0.0021}, {"name": "o2", "bias": -2.965, "value": -3.1063, "delta": 0.0021}], "connections": [{"from": "x1", "to": "h1", "weight": -3.2394}, {"from": "x2", "to": "h1", "weight": 3.151}, {"from": "x1", "to": "h2", "weight": 3.0772}, {"from": "x2", "to": "h2", "weight": -3.1752}, {"from": "h1", "to": "o1", "weight": -3.1027}, {"from": "h2", "to": "o1", "weight": -3.4315}, {"from": "h1", "to": "o2", "weight": 3.4548}, {"from": "h2", "to": "o2", "weight": 3.1402}]}, {"epoch": 1150, "loss": 0.0032, "accuracy": 1.0, "neurons": [{"name": "x1", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "x2", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "h1", "bias": 1.5263, "value": -0.9239, "delta": 0.0019}, {"name": "h2", "bias": 1.4854, "value": -0.9191, "delta": 0.0021}, {"name": "o1", "bias": 2.9895, "value": 3.0751, "delta": -0.002}, {"name": "o2", "bias": -2.9895, "value": -3.1326, "delta": 0.002}], "connections": [{"from": "x1", "to": "h1", "weight": -3.2519}, {"from": "x2", "to": "h1", "weight": 3.1632}, {"from": "x1", "to": "h2", "weight": 3.0903}, {"from": "x2", "to": "h2", "weight": -3.1884}, {"from": "h1", "to": "o1", "weight": -3.1269}, {"from": "h2", "to": "o1", "weight": -3.4557}, {"from": "h1", "to": "o2", "weight": 3.479}, {"from": "h2", "to": "o2", "weight": 3.1643}]}, {"epoch": 1200, "loss": 0.003, "accuracy": 1.0, "neurons": [{"name": "x1", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "x2", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "h1", "bias": 1.5317, "value": -0.9247, "delta": 0.0018}, {"name": "h2", "bias": 1.4913, "value": -0.9201, "delta": 0.002}, {"name": "o1", "bias": 3.0128, "value": 3.1001, "delta": -0.0019}, {"name": "o2", "bias": -3.0128, "value": -3.1575, "delta": 0.0019}], "connections": [{"from": "x1", "to": "h1", "weight": -3.2636}, {"from": "x2", "to": "h1", "weight": 3.1748}, {"from": "x1", "to": "h2", "weight": 3.1027}, {"from": "x2", "to": "h2", "weight": -3.2009}, {"from": "h1", "to": "o1", "weight": -3.1499}, {"from": "h2", "to": "o1", "weight": -3.4786}, {"from": "h1", "to": "o2", "weight": 3.502}, {"from": "h2", "to": "o2", "weight": 3.1872}]}, {"epoch": 1250, "loss": 0.0029, "accuracy": 1.0, "neurons": [{"name": "x1", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "x2", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "h1", "bias": 1.5369, "value": -0.9255, "delta": 0.0018}, {"name": "h2", "bias": 1.4969, "value": -0.9209, "delta": 0.0019}, {"name": "o1", "bias": 3.0351, "value": 3.1239, "delta": -0.0018}, {"name": "o2", "bias": -3.0351, "value": -3.1814, "delta": 0.0018}], "connections": [{"from": "x1", "to": "h1", "weight": -3.2748}, {"from": "x2", "to": "h1", "weight": 3.1857}, {"from": "x1", "to": "h2", "weight": 3.1144}, {"from": "x2", "to": "h2", "weight": -3.2127}, {"from": "h1", "to": "o1", "weight": -3.1719}, {"from": "h2", "to": "o1", "weight": -3.5005}, {"from": "h1", "to": "o2", "weight": 3.524}, {"from": "h2", "to": "o2", "weight": 3.2091}]}, {"epoch": 1300, "loss": 0.0028, "accuracy": 1.0, "neurons": [{"name": "x1", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "x2", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "h1", "bias": 1.5418, "value": -0.9262, "delta": 0.0017}, {"name": "h2", "bias": 1.5023, "value": -0.9218, "delta": 0.0018}, {"name": "o1", "bias": 3.0563, "value": 3.1466, "delta": -0.0017}, {"name": "o2", "bias": -3.0563, "value": -3.2041, "delta": 0.0017}], "connections": [{"from": "x1", "to": "h1", "weight": -3.2855}, {"from": "x2", "to": "h1", "weight": 3.1962}, {"from": "x1", "to": "h2", "weight": 3.1256}, {"from": "x2", "to": "h2", "weight": -3.224}, {"from": "h1", "to": "o1", "weight": -3.193}, {"from": "h2", "to": "o1", "weight": -3.5215}, {"from": "h1", "to": "o2", "weight": 3.5451}, {"from": "h2", "to": "o2", "weight": 3.2301}]}, {"epoch": 1350, "loss": 0.0027, "accuracy": 1.0, "neurons": [{"name": "x1", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "x2", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "h1", "bias": 1.5465, "value": -0.9269, "delta": 0.0016}, {"name": "h2", "bias": 1.5074, "value": -0.9225, "delta": 0.0017}, {"name": "o1", "bias": 3.0767, "value": 3.1684, "delta": -0.0017}, {"name": "o2", "bias": -3.0767, "value": -3.2259, "delta": 0.0017}], "connections": [{"from": "x1", "to": "h1", "weight": -3.2956}, {"from": "x2", "to": "h1", "weight": 3.2061}, {"from": "x1", "to": "h2", "weight": 3.1363}, {"from": "x2", "to": "h2", "weight": -3.2347}, {"from": "h1", "to": "o1", "weight": -3.2131}, {"from": "h2", "to": "o1", "weight": -3.5415}, {"from": "h1", "to": "o2", "weight": 3.5652}, {"from": "h2", "to": "o2", "weight": 3.2501}]}, {"epoch": 1400, "loss": 0.0025, "accuracy": 1.0, "neurons": [{"name": "x1", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "x2", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "h1", "bias": 1.551, "value": -0.9276, "delta": 0.0015}, {"name": "h2", "bias": 1.5123, "value": -0.9233, "delta": 0.0016}, {"name": "o1", "bias": 3.0963, "value": 3.1892, "delta": -0.0016}, {"name": "o2", "bias": -3.0963, "value": -3.2468, "delta": 0.0016}], "connections": [{"from": "x1", "to": "h1", "weight": -3.3053}, {"from": "x2", "to": "h1", "weight": 3.2156}, {"from": "x1", "to": "h2", "weight": 3.1464}, {"from": "x2", "to": "h2", "weight": -3.245}, {"from": "h1", "to": "o1", "weight": -3.2324}, {"from": "h2", "to": "o1", "weight": -3.5608}, {"from": "h1", "to": "o2", "weight": 3.5845}, {"from": "h2", "to": "o2", "weight": 3.2694}]}, {"epoch": 1450, "loss": 0.0025, "accuracy": 1.0, "neurons": [{"name": "x1", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "x2", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "h1", "bias": 1.5553, "value": -0.9282, "delta": 0.0015}, {"name": "h2", "bias": 1.517, "value": -0.924, "delta": 0.0015}, {"name": "o1", "bias": 3.1151, "value": 3.2093, "delta": -0.0015}, {"name": "o2", "bias": -3.1151, "value": -3.2669, "delta": 0.0015}], "connections": [{"from": "x1", "to": "h1", "weight": -3.3146}, {"from": "x2", "to": "h1", "weight": 3.2247}, {"from": "x1", "to": "h2", "weight": 3.1562}, {"from": "x2", "to": "h2", "weight": -3.2548}, {"from": "h1", "to": "o1", "weight": -3.251}, {"from": "h2", "to": "o1", "weight": -3.5793}, {"from": "h1", "to": "o2", "weight": 3.6031}, {"from": "h2", "to": "o2", "weight": 3.2879}]}, {"epoch": 1500, "loss": 0.0024, "accuracy": 1.0, "neurons": [{"name": "x1", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "x2", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "h1", "bias": 1.5594, "value": -0.9288, "delta": 0.0014}, {"name": "h2", "bias": 1.5214, "value": -0.9246, "delta": 0.0015}, {"name": "o1", "bias": 3.1332, "value": 3.2286, "delta": -0.0015}, {"name": "o2", "bias": -3.1332, "value": -3.2862, "delta": 0.0015}], "connections": [{"from": "x1", "to": "h1", "weight": -3.3235}, {"from": "x2", "to": "h1", "weight": 3.2335}, {"from": "x1", "to": "h2", "weight": 3.1655}, {"from": "x2", "to": "h2", "weight": -3.2642}, {"from": "h1", "to": "o1", "weight": -3.2689}, {"from": "h2", "to": "o1", "weight": -3.5971}, {"from": "h1", "to": "o2", "weight": 3.621}, {"from": "h2", "to": "o2", "weight": 3.3057}]}, {"epoch": 1550, "loss": 0.0023, "accuracy": 1.0, "neurons": [{"name": "x1", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "x2", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "h1", "bias": 1.5634, "value": -0.9293, "delta": 0.0013}, {"name": "h2", "bias": 1.5257, "value": -0.9253, "delta": 0.0014}, {"name": "o1", "bias": 3.1507, "value": 3.2472, "delta": -0.0014}, {"name": "o2", "bias": -3.1507, "value": -3.3048, "delta": 0.0014}], "connections": [{"from": "x1", "to": "h1", "weight": -3.332}, {"from": "x2", "to": "h1", "weight": 3.2418}, {"from": "x1", "to": "h2", "weight": 3.1744}, {"from": "x2", "to": "h2", "weight": -3.2733}, {"from": "h1", "to": "o1", "weight": -3.2862}, {"from": "h2", "to": "o1", "weight": -3.6143}, {"from": "h1", "to": "o2", "weight": 3.6383}, {"from": "h2", "to": "o2", "weight": 3.3229}]}, {"epoch": 1600, "loss": 0.0022, "accuracy": 1.0, "neurons": [{"name": "x1", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "x2", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "h1", "bias": 1.5672, "value": -0.9299, "delta": 0.0013}, {"name": "h2", "bias": 1.5299, "value": -0.9259, "delta": 0.0014}, {"name": "o1", "bias": 3.1675, "value": 3.2652, "delta": -0.0014}, {"name": "o2", "bias": -3.1675, "value": -3.3228, "delta": 0.0014}], "connections": [{"from": "x1", "to": "h1", "weight": -3.3402}, {"from": "x2", "to": "h1", "weight": 3.2499}, {"from": "x1", "to": "h2", "weight": 3.183}, {"from": "x2", "to": "h2", "weight": -3.2819}, {"from": "h1", "to": "o1", "weight": -3.3028}, {"from": "h2", "to": "o1", "weight": -3.6309}, {"from": "h1", "to": "o2", "weight": 3.6549}, {"from": "h2", "to": "o2", "weight": 3.3395}]}, {"epoch": 1650, "loss": 0.0021, "accuracy": 1.0, "neurons": [{"name": "x1", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "x2", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "h1", "bias": 1.5709, "value": -0.9304, "delta": 0.0012}, {"name": "h2", "bias": 1.5339, "value": -0.9265, "delta": 0.0013}, {"name": "o1", "bias": 3.1838, "value": 3.2825, "delta": -0.0013}, {"name": "o2", "bias": -3.1838, "value": -3.3401, "delta": 0.0013}], "connections": [{"from": "x1", "to": "h1", "weight": -3.3481}, {"from": "x2", "to": "h1", "weight": 3.2577}, {"from": "x1", "to": "h2", "weight": 3.1913}, {"from": "x2", "to": "h2", "weight": -3.2903}, {"from": "h1", "to": "o1", "weight": -3.3189}, {"from": "h2", "to": "o1", "weight": -3.6469}, {"from": "h1", "to": "o2", "weight": 3.671}, {"from": "h2", "to": "o2", "weight": 3.3555}]}, {"epoch": 1700, "loss": 0.002, "accuracy": 1.0, "neurons": [{"name": "x1", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "x2", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "h1", "bias": 1.5744, "value": -0.9309, "delta": 0.0012}, {"name": "h2", "bias": 1.5377, "value": -0.927, "delta": 0.0013}, {"name": "o1", "bias": 3.1996, "value": 3.2993, "delta": -0.0013}, {"name": "o2", "bias": -3.1996, "value": -3.3569, "delta": 0.0013}], "connections": [{"from": "x1", "to": "h1", "weight": -3.3558}, {"from": "x2", "to": "h1", "weight": 3.2651}, {"from": "x1", "to": "h2", "weight": 3.1993}, {"from": "x2", "to": "h2", "weight": -3.2983}, {"from": "h1", "to": "o1", "weight": -3.3345}, {"from": "h2", "to": "o1", "weight": -3.6624}, {"from": "h1", "to": "o2", "weight": 3.6866}, {"from": "h2", "to": "o2", "weight": 3.371}]}, {"epoch": 1750, "loss": 0.002, "accuracy": 1.0, "neurons": [{"name": "x1", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "x2", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "h1", "bias": 1.5779, "value": -0.9314, "delta": 0.0012}, {"name": "h2", "bias": 1.5414, "value": -0.9275, "delta": 0.0012}, {"name": "o1", "bias": 3.2149, "value": 3.3155, "delta": -0.0012}, {"name": "o2", "bias": -3.2149, "value": -3.3732, "delta": 0.0012}], "connections": [{"from": "x1", "to": "h1", "weight": -3.3631}, {"from": "x2", "to": "h1", "weight": 3.2724}, {"from": "x1", "to": "h2", "weight": 3.207}, {"from": "x2", "to": "h2", "weight": -3.3061}, {"from": "h1", "to": "o1", "weight": -3.3496}, {"from": "h2", "to": "o1", "weight": -3.6774}, {"from": "h1", "to": "o2", "weight": 3.7017}, {"from": "h2", "to": "o2", "weight": 3.386}]}, {"epoch": 1800, "loss": 0.0019, "accuracy": 1.0, "neurons": [{"name": "x1", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "x2", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "h1", "bias": 1.5812, "value": -0.9318, "delta": 0.0011}, {"name": "h2", "bias": 1.545, "value": -0.928, "delta": 0.0012}, {"name": "o1", "bias": 3.2297, "value": 3.3313, "delta": -0.0012}, {"name": "o2", "bias": -3.2297, "value": -3.3889, "delta": 0.0012}], "connections": [{"from": "x1", "to": "h1", "weight": -3.3702}, {"from": "x2", "to": "h1", "weight": 3.2793}, {"from": "x1", "to": "h2", "weight": 3.2144}, {"from": "x2", "to": "h2", "weight": -3.3136}, {"from": "h1", "to": "o1", "weight": -3.3642}, {"from": "h2", "to": "o1", "weight": -3.692}, {"from": "h1", "to": "o2", "weight": 3.7163}, {"from": "h2", "to": "o2", "weight": 3.4006}]}, {"epoch": 1850, "loss": 0.0019, "accuracy": 1.0, "neurons": [{"name": "x1", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "x2", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "h1", "bias": 1.5844, "value": -0.9323, "delta": 0.0011}, {"name": "h2", "bias": 1.5484, "value": -0.9285, "delta": 0.0011}, {"name": "o1", "bias": 3.244, "value": 3.3465, "delta": -0.0012}, {"name": "o2", "bias": -3.244, "value": -3.4042, "delta": 0.0012}], "connections": [{"from": "x1", "to": "h1", "weight": -3.3771}, {"from": "x2", "to": "h1", "weight": 3.2861}, {"from": "x1", "to": "h2", "weight": 3.2216}, {"from": "x2", "to": "h2", "weight": -3.3209}, {"from": "h1", "to": "o1", "weight": -3.3784}, {"from": "h2", "to": "o1", "weight": -3.7061}, {"from": "h1", "to": "o2", "weight": 3.7305}, {"from": "h2", "to": "o2", "weight": 3.4148}]}, {"epoch": 1900, "loss": 0.0018, "accuracy": 1.0, "neurons": [{"name": "x1", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "x2", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "h1", "bias": 1.5875, "value": -0.9327, "delta": 0.0011}, {"name": "h2", "bias": 1.5518, "value": -0.929, "delta": 0.0011}, {"name": "o1", "bias": 3.258, "value": 3.3614, "delta": -0.0011}, {"name": "o2", "bias": -3.258, "value": -3.419, "delta": 0.0011}], "connections": [{"from": "x1", "to": "h1", "weight": -3.3838}, {"from": "x2", "to": "h1", "weight": 3.2926}, {"from": "x1", "to": "h2", "weight": 3.2285}, {"from": "x2", "to": "h2", "weight": -3.3279}, {"from": "h1", "to": "o1", "weight": -3.3922}, {"from": "h2", "to": "o1", "weight": -3.7199}, {"from": "h1", "to": "o2", "weight": 3.7443}, {"from": "h2", "to": "o2", "weight": 3.4285}]}, {"epoch": 1950, "loss": 0.0018, "accuracy": 1.0, "neurons": [{"name": "x1", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "x2", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "h1", "bias": 1.5905, "value": -0.9331, "delta": 0.001}, {"name": "h2", "bias": 1.555, "value": -0.9295, "delta": 0.0011}, {"name": "o1", "bias": 3.2716, "value": 3.3758, "delta": -0.0011}, {"name": "o2", "bias": -3.2716, "value": -3.4335, "delta": 0.0011}], "connections": [{"from": "x1", "to": "h1", "weight": -3.3903}, {"from": "x2", "to": "h1", "weight": 3.299}, {"from": "x1", "to": "h2", "weight": 3.2353}, {"from": "x2", "to": "h2", "weight": -3.3347}, {"from": "h1", "to": "o1", "weight": -3.4055}, {"from": "h2", "to": "o1", "weight": -3.7332}, {"from": "h1", "to": "o2", "weight": 3.7576}, {"from": "h2", "to": "o2", "weight": 3.4418}]}, {"epoch": 2000, "loss": 0.0017, "accuracy": 1.0, "neurons": [{"name": "x1", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "x2", "bias": 0.0, "value": 1.0, "delta": 0.0}, {"name": "h1", "bias": 1.5934, "value": -0.9335, "delta": 0.001}, {"name": "h2", "bias": 1.5582, "value": -0.9299, "delta": 0.001}, {"name": "o1", "bias": 3.2848, "value": 3.3898, "delta": -0.0011}, {"name": "o2", "bias": -3.2848, "value": -3.4475, "delta": 0.0011}], "connections": [{"from": "x1", "to": "h1", "weight": -3.3965}, {"from": "x2", "to": "h1", "weight": 3.3051}, {"from": "x1", "to": "h2", "weight": 3.2418}, {"from": "x2", "to": "h2", "weight": -3.3413}, {"from": "h1", "to": "o1", "weight": -3.4186}, {"from": "h2", "to": "o1", "weight": -3.7462}, {"from": "h1", "to": "o2", "weight": 3.7707}, {"from": "h2", "to": "o2", "weight": 3.4548}]}];
+
+        const canvas = document.getElementById('netCanvas');
+        const ctx = canvas.getContext('2d');
+        const scrubber = document.getElementById('scrubber');
+        const btnPlay = document.getElementById('btnPlay');
+        const infoEpoch = document.getElementById('infoEpoch');
+        const infoLoss = document.getElementById('infoLoss');
+        const infoAcc = document.getElementById('infoAcc');
+
+        // Config
+        let currentIdx = 0;
+        let isPlaying = false;
+        const width = 800;
+        const height = 600;
+        canvas.width = width;
+        canvas.height = height;
+
+        scrubber.max = snapshots.length - 1;
+
+        // Hardcoded XOR positions
+        const positions = {
+            'x1': { x: 100, y: 200 }, 'x2': { x: 100, y: 400 },
+            'h1': { x: 400, y: 200 }, 'h2': { x: 400, y: 400 },
+            'o1': { x: 700, y: 200 }, 'o2': { x: 700, y: 400 }
+        };
+
+        function drawNeuron(name, x, y, value, bias) {
+            ctx.beginPath();
+            ctx.arc(x, y, 30, 0, Math.PI * 2);
+            ctx.fillStyle = '#444';
+            ctx.fill();
+
+            // Value indicator (Inner circle color)
+            const intensity = Math.min(Math.abs(value), 1.0);
+            ctx.fillStyle = value > 0 ? `rgba(0, 255, 255, ${intensity})` : `rgba(255, 0, 255, ${intensity})`;
+            ctx.beginPath();
+            ctx.arc(x, y, 25, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Text
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 14px monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(name, x, y - 5);
+            ctx.font = '10px monospace';
+            ctx.fillText(value.toFixed(2), x, y + 15);
+
+            // Bias ring
+            if (Math.abs(bias) > 0.01) {
+                ctx.beginPath();
+                ctx.arc(x, y, 32, 0, Math.PI * 2);
+                ctx.strokeStyle = bias > 0 ? '#0f0' : '#f00';
+                ctx.lineWidth = Math.min(Math.abs(bias) * 5, 5);
+                ctx.stroke();
+            }
+        }
+
+        function drawConnection(fromPos, toPos, weight) {
+            ctx.beginPath();
+            ctx.moveTo(fromPos.x, fromPos.y);
+            ctx.lineTo(toPos.x, toPos.y);
+            ctx.strokeStyle = weight > 0 ? '#0f0' : '#f00';
+            ctx.lineWidth = Math.min(Math.abs(weight) * 5, 10);
+            ctx.globalAlpha = 0.6;
+            ctx.stroke();
+            ctx.globalAlpha = 1.0;
+        }
+
+        function render(idx) {
+            const snap = snapshots[idx];
+            ctx.clearRect(0, 0, width, height);
+
+            // Draw connections first
+            snap.connections.forEach(c => {
+                const p1 = positions[c.from];
+                const p2 = positions[c.to];
+                if (p1 && p2) drawConnection(p1, p2, c.weight);
+            });
+
+            // Draw neurons
+            snap.neurons.forEach(n => {
+                const p = positions[n.name];
+                if (p) drawNeuron(n.name, p.x, p.y, n.value, n.bias);
+            });
+
+            // Update UI
+            infoEpoch.textContent = `Epoch: ${snap.epoch}`;
+            infoLoss.textContent = `Loss: ${snap.loss.toFixed(4)}`;
+            infoAcc.textContent = `Acc: ${(snap.accuracy * 100).toFixed(0)}%`;
+            scrubber.value = idx;
+        }
+
+        // Loop
+        function loop() {
+            if (isPlaying) {
+                if (currentIdx < snapshots.length - 1) {
+                    currentIdx++;
+                    render(currentIdx);
+                    requestAnimationFrame(loop);
+                } else {
+                    isPlaying = false;
+                    btnPlay.textContent = "Play";
+                }
+            }
+        }
+
+        // Events
+        btnPlay.onclick = () => {
+            if (currentIdx >= snapshots.length - 1) currentIdx = 0;
+            isPlaying = !isPlaying;
+            btnPlay.textContent = isPlaying ? "Pause" : "Play";
+            if (isPlaying) loop();
+        };
+
+        scrubber.oninput = (e) => {
+            isPlaying = false;
+            btnPlay.textContent = "Play";
+            currentIdx = parseInt(e.target.value);
+            render(currentIdx);
+        };
+
+        // Init
+        render(0);
+
+    </script>
+</body>
+
+</html>

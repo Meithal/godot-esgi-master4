@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Flappy Bird Learning Visualization</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #1a1a1a;
+            color: #eee;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        #canvas-container {
+            flex-grow: 1;
+            position: relative;
+            overflow: auto;
+            display: flex;
+            justify-content: center;
+            align-items: top;
+            padding: 20px;
+        }
+
+        canvas {
+            background: #252525;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        #controls {
+            padding: 20px;
+            background: #333;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            border-top: 1px solid #444;
+            z-index: 10;
+        }
+
+        #scrubber {
+            flex-grow: 1;
+            cursor: pointer;
+        }
+
+        .stat-box {
+            background: #444;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-weight: bold;
+            min-width: 150px;
+            text-align: center;
+        }
+
+        .legend {
+            display: flex;
+            gap: 10px;
+            font-size: 12px;
+            color: #aaa;
+            margin-left: 20px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="canvas-container">
+        <canvas id="netCanvas"></canvas>
+    </div>
+    <div id="controls">
+        <button id="btnPlay">Play</button>
+        <input type="range" id="scrubber" min="0" max="100" value="0">
+        <div class="stat-box" id="infoEpoch">Epoch: 0</div>
+        <div class="stat-box" id="infoLoss">Loss: 0.000</div>
+        <div class="stat-box" id="infoAcc">Acc: 0%</div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="dot" style="background:cyan"></div>+Val
+            </div>
+            <div class="legend-item">
+                <div class="dot" style="background:magenta"></div>-Val
+            </div>
+            <div class="legend-item">
+                <div class="dot" style="background:#0f0"></div>+W
+            </div>
+            <div class="legend-item">
+                <div class="dot" style="background:#f00"></div>-W
+            </div>
+        </div>
+    </div>
+    <div id="input-legend"
+        style="padding: 20px; background: #222; border-top: 1px solid #444; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; font-size: 13px;">
+        <div><strong>fh</strong>: Bird Height (Y)</div>
+        <div><strong>fx</strong>: Bird X Position</div>
+        <div><strong>vs</strong>: Vertical Speed</div>
+        <div><strong>dr</strong>: Dist to Roof</div>
+        <div><strong>dx</strong>: Dist to Pipe (X)</div>
+        <div><strong>oy</strong>: Pipe Height (Y)</div>
+        <div><strong>p</strong>: Pipes Passed</div>
+        <div><strong>db</strong>: Dist to Bottom Pipe</div>
+        <div><strong>dt</strong>: Dist to Top Pipe</div>
+        <div><strong>tti</strong>: Time to Impact</div>
+        <div style="margin-top: 10px; border-top: 1px solid #444; padding-top: 5px; grid-column: 1 / -1;">
+            <strong>Outputs:</strong>
+            <span style="margin-left: 10px;"><strong>No</strong>: Do Nothing (0)</span>
+            <span style="margin-left: 20px;"><strong>Jump</strong>: Flap Wings (1)</span>
+        </div>
+    </div>
+
+    <script>
+        // Data injected by python
+        const snapshots = __SNAPSHOTS__;
+
+        const canvas = document.getElementById('netCanvas');
+        const ctx = canvas.getContext('2d');
+        const scrubber = document.getElementById('scrubber');
+        const btnPlay = document.getElementById('btnPlay');
+        const infoEpoch = document.getElementById('infoEpoch');
+        const infoLoss = document.getElementById('infoLoss');
+        const infoAcc = document.getElementById('infoAcc');
+
+        // Config
+        let currentIdx = 0;
+        let isPlaying = false;
+
+        // Larger canvas for Flappy
+        const width = 1200;
+        const height = 900;
+        canvas.width = width;
+        canvas.height = height;
+
+        scrubber.max = snapshots.length - 1;
+
+        // Auto-Layout Logic
+        function getLayerIndex(name) {
+            // Flappy Logic
+            // Outputs: only 'No' and 'Jump'
+            if (name === 'No' || name === 'Jump') return 3;
+            // Hidden layers
+            if (name.startsWith('h1')) return 1;
+            if (name.startsWith('h2')) return 2;
+            // Everything else is input (fh, fx, vs, dr, dx, oy, p, db, dt, tti)
+            return 0;
+        }
+
+        const positions = {};
+        let layoutComputed = false;
+
+        function computeLayout(neurons) {
+            if (layoutComputed) return;
+            console.log("Computing layout for " + neurons.length + " neurons");
+
+            // Group by layer
+            const layers = [];
+            neurons.forEach(n => {
+                const idx = getLayerIndex(n.name);
+                if (!layers[idx]) layers[idx] = [];
+                layers[idx].push(n.name);
+            });
+
+            console.log("Layers breakdown:", layers.map(l => l ? l.length : 0));
+
+            // Assign coords
+            // Use padded width
+            const padX = 100;
+            const usableWidth = width - (padX * 2);
+            const layerStride = usableWidth / (Math.max(1, layers.length - 1));
+
+            layers.forEach((nodes, lIdx) => {
+                if (!nodes) return;
+                const x = padX + (lIdx * layerStride);
+
+                // Vertical spacing
+                // Use padded height
+                const padY = 50;
+                const usableHeight = height - (padY * 2);
+                const nodeSpacing = usableHeight / (nodes.length + 1); // +1 to center
+
+                nodes.forEach((name, nIdx) => {
+                    positions[name] = {
+                        x: x,
+                        y: padY + ((nIdx + 1) * nodeSpacing)
+                    };
+                });
+            });
+
+            layoutComputed = true;
+            console.log("Layout computed. Head:", Object.keys(positions)[0], positions[Object.keys(positions)[0]]);
+        }
+
+        function drawNeuron(name, x, y, value, bias) {
+            // Smaller neurons for Flappy
+            const radius = 18;
+
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fillStyle = '#444';
+            ctx.fill();
+
+            // Value indicator
+            const intensity = Math.min(Math.abs(value), 1.0);
+            ctx.fillStyle = value > 0 ? `rgba(0, 255, 255, ${intensity})` : `rgba(255, 0, 255, ${intensity})`;
+            ctx.beginPath();
+            ctx.arc(x, y, radius - 4, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Text (simplified for density)
+            ctx.fillStyle = '#fff';
+            // Only draw name if space allows or just draw truncated
+            if (name.length < 5 || radius > 15) {
+                ctx.font = 'bold 10px monospace';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(name, x, y - radius - 10);
+            }
+
+            // Bias ring
+            if (Math.abs(bias) > 0.01) {
+                ctx.beginPath();
+                ctx.arc(x, y, radius + 2, 0, Math.PI * 2);
+                ctx.strokeStyle = bias > 0 ? '#0f0' : '#f00';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+        }
+
+        function drawConnection(fromPos, toPos, weight) {
+            // Skip very weak connections to reduce clutter?
+            if (Math.abs(weight) < 0.05) return;
+
+            ctx.beginPath();
+            ctx.moveTo(fromPos.x, fromPos.y);
+            ctx.lineTo(toPos.x, toPos.y);
+            ctx.strokeStyle = weight > 0 ? '#0f0' : '#f00';
+            ctx.lineWidth = Math.min(Math.abs(weight) * 3, 5); // Thinner logic
+            ctx.globalAlpha = 0.3; // More transparent
+            ctx.stroke();
+            ctx.globalAlpha = 1.0;
+        }
+
+        function render(idx) {
+            try {
+                const snap = snapshots[idx];
+                if (!snap) return;
+
+                computeLayout(snap.neurons);
+
+                ctx.clearRect(0, 0, width, height);
+
+                // Draw connections
+                snap.connections.forEach(c => {
+                    const p1 = positions[c.from];
+                    const p2 = positions[c.to];
+                    if (p1 && p2) drawConnection(p1, p2, c.weight);
+                });
+
+                // Draw neurons
+                snap.neurons.forEach(n => {
+                    const p = positions[n.name];
+                    if (p) drawNeuron(n.name, p.x, p.y, n.value, n.bias);
+                });
+
+                // Update UI
+                infoEpoch.textContent = `Epoch: ${snap.epoch}`;
+                infoLoss.textContent = `Loss: ${snap.loss.toFixed(4)}`;
+                infoAcc.textContent = `Acc: ${(snap.accuracy * 100).toFixed(0)}%`;
+                scrubber.value = idx;
+            } catch (e) {
+                console.error("Render error:", e);
+            }
+        }
+
+        function loop() {
+            if (isPlaying) {
+                if (currentIdx < snapshots.length - 1) {
+                    currentIdx++;
+                    render(currentIdx);
+                    requestAnimationFrame(loop);
+                } else {
+                    isPlaying = false;
+                    btnPlay.textContent = "Play";
+                }
+            }
+        }
+
+        btnPlay.onclick = () => {
+            if (currentIdx >= snapshots.length - 1) currentIdx = 0;
+            isPlaying = !isPlaying;
+            btnPlay.textContent = isPlaying ? "Pause" : "Play";
+            if (isPlaying) loop();
+        };
+
+        scrubber.oninput = (e) => {
+            isPlaying = false;
+            btnPlay.textContent = "Play";
+            currentIdx = parseInt(e.target.value);
+            render(currentIdx);
+        };
+
+        console.log("Starting render...");
+        render(0);
+
+    </script>
+</body>
+
+</html>

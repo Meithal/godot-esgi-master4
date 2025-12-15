@@ -36,7 +36,12 @@ update-model: train build-native
 check-weights:
 	head -n 5 IA/SoftmaxC/model_weights.txt
 
+# Build Godot C# project
+build-godot:
+	@echo "Building Godot C# project..."
+	@$(GODOT_BIN) --headless --path ./godot --build-solutions --quit || true
+
 # Run Godot (assumes standard Mac path, override if different)
 GODOT_BIN ?= /Applications/Godot_mono.app/Contents/MacOS/Godot
-run-godot:
+run-godot: build-godot
 	$(GODOT_BIN) --path ./godot
